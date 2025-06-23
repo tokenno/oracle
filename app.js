@@ -14,8 +14,7 @@ if (!fileInputsContainer || !uploadArea || !trackCountInput || !processBtn) {
     window.showStatus('UI elements not found. Check console.', 'error');
     throw new Error('Initialization failed');
 }
-let loopDurationMinutes = 1.0;
-let loopAllCheckbox = document.getElementById('loop-all-checkbox');
+
 let audioBuffers = [];
 let isPlaying = false;
 let audioContext = null;
@@ -903,125 +902,68 @@ function getAlgorithmicOrder(files, algorithm, length) {
     return order;
 }
 
-function validateAudioProcessing(files, channels, length, sampleRate, contextName = 'unknown') {
-    // Validate context parameters
-    if (!Number.isFinite(channels) || channels < 1) {
-        throw new Error(`Invalid number of channels for ${contextName}: ${channels}`);
-    }
-    if (!Number.isFinite(length) || length <= 0) {
-        throw new Error(`Invalid length for ${contextName}: ${length}`);
-    }
-    if (!Number.isFinite(sampleRate) || sampleRate <= 0) {
-        throw new Error(`Invalid sample rate for ${contextName}: ${sampleRate}`);
-    }
-
-    // Validate and filter audio buffers
-    if (!files || files.length === 0) {
-        throw new Error(`No audio files provided for ${contextName}`);
-    }
-    const validFiles = files.filter(f => {
-        if (!f || !(f instanceof AudioBuffer)) {
-            console.warn(`Invalid or null AudioBuffer for ${f?.name || 'unknown'}`);
-            return false;
-        }
-        if (f.duration <= 0 || isNaN(f.duration)) {
-            console.warn(`Invalid duration for ${f.name}: ${f.duration}`);
-            return false;
-        }
-        if (!f.sampleRate || f.sampleRate <= 0) {
-            console.warn(`Invalid sample rate for ${f.name}: ${f.sampleRate}`);
-            return false;
-        }
-        if (!f.numberOfChannels || f.numberOfChannels < 1) {
-            console.warn(`Invalid number of channels for ${f.name}: ${f.numberOfChannels}`);
-            return false;
-        }
-        return true;
-    });
-
-    if (validFiles.length === 0) {
-        throw new Error(`No valid audio buffers for ${contextName}`);
-    }
-
-    return validFiles;
-}
-
 async function createLoopingMix(processedFiles, wetDryMix, algorithm, loopDurationMinutes) {
     if (!processedFiles || processedFiles.length === 0) {
         console.error('app.js: No files provided for looping mix');
-        window.showStatus('No valid audio files for mixing.', 'error');
         return null;
     }
+    const sampleRate = audioContext.sampleRate;
+    const loopDurationSeconds = loopDurationMinutes * 60;
+    const beatDuration = (60 / projectBPM) * 4;
+    const maxLoops = Math.min(MAX_LOOPS, Math.ceil(loopDurationSeconds / beatDuration));
+    const maxDuration = Math.max(...processedFiles.map(f => f ? f.duration : 0)) * maxLoops;
+    const offlineCtx = new OfflineAudioContext(2, maxDuration * sampleRate, sampleRate);
+    const reverb = offlineCtx.createConvolver();
+    const reverbBuffer = await createReverbImpulseResponse(offlineCtx, 2.0);
+    reverb.buffer = reverbBuffer;
+    const dryGain = offlineCtx.createGain();
+    const wetGain = offlineCtx.createGain();
+    dryGain.gain.value = 1 - wetDryMix;
+    wetGain.gain.value = wetDryMix;
+    const masterGain = offlineCtx.createGain();
+    const masterGainValue = Math.min(0.8 / Math.sqrt(processedFiles.length), 0.8);
+    masterGain.gain.value = masterGainValue;
+    reverb.connect(wetGain);
+    wetGain.connect(masterGain);
+    dryGain.connect(masterGain);
+    masterGain.connect(offlineCtx.destination);
 
-    try {
-        const sampleRate = audioContext.sampleRate;
-        const loopDurationSeconds = loopDurationMinutes * 60;
-        const beatDuration = (60 / projectBPM) * 4;
-        const maxLoops = Math.min(MAX_LOOPS, Math.ceil(loopDurationSeconds / beatDuration));
-        const maxDuration = Math.min(600, Math.max(...processedFiles.map(f => f ? f.duration : 0)) * maxLoops);
-
-        // Validate files and context parameters
-        const validFiles = validateAudioProcessing(processedFiles, 2, maxDuration * sampleRate, sampleRate, 'looping mix');
-
-        const offlineCtx = new OfflineAudioContext(2, Math.max(1, maxDuration * sampleRate), sampleRate);
-        const reverb = offlineCtx.createConvolver();
-        const reverbBuffer = await createReverbImpulseResponse(offlineCtx, 2.0);
-        validateAudioProcessing([reverbBuffer], 2, reverbBuffer.length, reverbBuffer.sampleRate, 'reverb impulse');
-        reverb.buffer = reverbBuffer;
-        const dryGain = offlineCtx.createGain();
-        const wetGain = offlineCtx.createGain();
-        dryGain.gain.value = 1 - wetDryMix;
-        wetGain.gain.value = wetDryMix;
-        const masterGain = offlineCtx.createGain();
-        const masterGainValue = Math.min(0.8 / Math.sqrt(validFiles.length), 0.8);
-        masterGain.gain.value = masterGainValue;
-        reverb.connect(wetGain);
-        wetGain.connect(masterGain);
-        dryGain.connect(masterGain);
-        masterGain.connect(offlineCtx.destination);
-
-        let order = [];
-        if (algorithm === 'sequential') {
-            order = Array.from({ length: maxLoops }, (_, i) => i % validFiles.length);
-        } else if (algorithm === 'markov') {
-            if (!markovChain) markovChain = buildMarkovChain(validFiles);
-            order = generateMarkovOrder(markovChain, maxLoops);
-        } else {
-            order = getAlgorithmicOrder(validFiles, algorithm, maxLoops);
-        }
-
-        for (let i = 0; i < order.length; i++) {
-            const fileIndex = order[i];
-            const buffer = validFiles[fileIndex];
-            if (!buffer) continue;
-            const metadata = fileMetadata.get(buffer.name);
-            if (!metadata) continue;
-            const source = offlineCtx.createBufferSource();
-            source.buffer = buffer;
-            source.loop = metadata.isLoop;
-            if (metadata.isLoop) {
-                source.loopStart = 0;
-                source.loopEnd = buffer.duration;
-            }
-            const gainNode = offlineCtx.createGain();
-            const startTime = i * (60 / projectBPM) * 4;
-            const blend = calculateDynamicBlend(i, order.length);
-            gainNode.gain.setValueAtTime(blend, startTime);
-            source.connect(gainNode);
-            gainNode.connect(dryGain);
-            gainNode.connect(reverb);
-            source.start(startTime);
-            activeSources.push({ source, startTime });
-        }
-
-        const renderedBuffer = await offlineCtx.startRendering();
-        validateAudioProcessing([renderedBuffer], 2, renderedBuffer.length, renderedBuffer.sampleRate, 'rendered looping mix');
-        return normalizeBuffer(renderedBuffer);
-    } catch (error) {
-        console.error('app.js: Error in createLoopingMix:', error);
-        window.showStatus(`Failed to create looping mix: ${error.message}`, 'error');
-        return null;
+    let order = [];
+    if (algorithm === 'sequential') {
+        order = Array.from({ length: maxLoops }, (_, i) => i % processedFiles.length);
+    } else if (algorithm === 'markov') {
+        if (!markovChain) markovChain = buildMarkovChain(processedFiles);
+        order = generateMarkovOrder(markovChain, maxLoops);
+    } else {
+        order = getAlgorithmicOrder(processedFiles, algorithm, maxLoops);
     }
+
+    for (let i = 0; i < order.length; i++) {
+        const fileIndex = order[i];
+        const buffer = processedFiles[fileIndex];
+        if (!buffer) continue;
+        const metadata = fileMetadata.get(buffer.name);
+        if (!metadata) continue;
+        const source = offlineCtx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = metadata.isLoop;
+        if (metadata.isLoop) {
+            source.loopStart = 0;
+            source.loopEnd = buffer.duration;
+        }
+        const gainNode = offlineCtx.createGain();
+        const startTime = i * (60 / projectBPM) * 4;
+        const blend = calculateDynamicBlend(i, order.length);
+        gainNode.gain.setValueAtTime(blend, startTime);
+        source.connect(gainNode);
+        gainNode.connect(dryGain);
+        gainNode.connect(reverb);
+        source.start(startTime);
+        activeSources.push({ source, startTime });
+    }
+
+    const renderedBuffer = await offlineCtx.startRendering();
+    return normalizeBuffer(renderedBuffer);
 }
 
 async function createOneShotMix(processedFiles, wetDryMix) {
@@ -1140,7 +1082,7 @@ async function processAudioFiles() {
         const silencePercentage = parseFloat(document.getElementById('silence-percentage')?.value || 0);
         const scaleSelect = document.getElementById('musical-scale')?.value || 'none';
         const scaleBehavior = document.getElementById('scale-behavior')?.value || 'filter';
-        const loopDurationMinutes = Math.max(0.1, Math.min(10, parseFloat(document.getElementById('loop-duration')?.value || 1.0)));
+        const loopDurationMinutes = Math.max(0.1, Math.min(10, parseFloat(document.getElementById('loop-duration')?.value || 5)));
 
         let processedFiles = audioBuffers.filter(b => b && validateAudioBuffer(b, b.name));
         if (processedFiles.length === 0) {
@@ -1321,27 +1263,13 @@ function shuffleArray(array) {
 }
 
 function createFileInputs(count = trackCount) {
-      console.log(`Creating ${count} file inputs`);
+    console.log(`Creating ${count} file inputs`);
     const oldInputs = fileInputsContainer.querySelectorAll('.file-upload-input');
     oldInputs.forEach(el => el.remove());
     audioBuffers = new Array(count).fill(null);
     fileMetadata.clear();
     processingQueue = [];
     isProcessing = false;
-
-        loopAllCheckbox = document.getElementById('loop-all-checkbox');
-    if (loopAllCheckbox) {
-        loopAllCheckbox.addEventListener('change', function() {
-            const shouldLoop = this.checked;
-            document.querySelectorAll('.loop-checkbox').forEach(checkbox => {
-                checkbox.checked = shouldLoop;
-                // Trigger change event to update metadata
-                const event = new Event('change');
-                checkbox.dispatchEvent(event);
-            });
-            showStatus(shouldLoop ? 'All files set to loop' : 'Looping disabled for all files', 'info');
-        });
-    }
 
     const folderInputDiv = document.createElement('div');
     folderInputDiv.className = 'file-upload-input';
@@ -1396,43 +1324,18 @@ function createFileInputs(count = trackCount) {
         loopInput.type = 'checkbox';
         loopInput.id = `loop-input-${i}`;
         loopInput.className = 'loop-checkbox';
-        loopInput.checked = true; // Default to checked
         
-     loopInput.addEventListener('change', function() {
-    console.log(`Loop checkbox changed for input ${i}`);
-    const file = audioBuffers[i]?.name;
-    if (file) {
-        // Get or create metadata
-        let metadata = fileMetadata.get(file);
-        if (!metadata) {
-            metadata = { 
-                bpm: 120, 
-                key: 'Unknown', 
-                isLoop: this.checked, 
-                centerFreq: 0 
-            };
-        } else {
-            metadata.isLoop = this.checked;
-        }
-        fileMetadata.set(file, metadata);
-        
-        // Update UI if available
-        if (fileBpm) {
-            fileBpm.textContent = `BPM: ${metadata.bpm}, Key: ${metadata.key}, Freq: ${metadata.centerFreq.toFixed(0)}Hz, Type: ${metadata.isLoop ? 'Loop' : 'One-Shot'}`;
-        }
-        console.log(`app.js: Loop set to ${metadata.isLoop} for ${file}`);
-        
-        // Sync loop-all checkbox state
-        if (loopAllCheckbox) {
-            const allChecked = Array.from(document.querySelectorAll('.loop-checkbox'))
-                .every(cb => cb.checked);
-            loopAllCheckbox.checked = allChecked;
-            loopAllCheckbox.indeterminate = !allChecked && 
-                Array.from(document.querySelectorAll('.loop-checkbox'))
-                    .some(cb => cb.checked);
-        }
-    }
-});
+        loopInput.addEventListener('change', () => {
+            console.log(`Loop checkbox changed for input ${i}`);
+            const file = audioBuffers[i]?.name;
+            if (file && fileMetadata.has(file)) {
+                const metadata = fileMetadata.get(file);
+                metadata.isLoop = loopInput.checked;
+                fileMetadata.set(file, metadata);
+                fileBpm.textContent = `BPM: ${metadata.bpm}, Key: ${metadata.key}, Freq: ${metadata.centerFreq.toFixed(0)}Hz, Type: ${metadata.isLoop ? 'Loop' : 'One-Shot'}`;
+                console.log(`app.js: Loop set to ${metadata.isLoop} for ${file}`);
+            }
+        });
 
         input.addEventListener('change', () => {
             console.log(`File input ${input.id} changed`);
