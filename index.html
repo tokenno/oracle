@@ -1292,23 +1292,17 @@ if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && wavefor
                     });
                 }
 
-            const loopDurationInput = document.getElementById('loop-duration');
-const loopDurationValue = document.getElementById('loop-duration-value'); // Add this line
-let loopDurationMinutes;
-
-if (!loopDurationInput) {
-    console.error('app.js: loop-duration input not found');
-    showStatus('Loop duration input not found. Using default value.', 'error');
-    loopDurationMinutes = 1.0;
-} else {
-    loopDurationMinutes = Math.max(0.1, Math.min(10, parseFloat(loopDurationInput.value || 1.0)));
-
+const loopDurationValue = document.getElementById('loop-duration-value');
+if (loopDurationInput && loopDurationValue) {
+    // Set default value to 1.0 (1 minute)
+    loopDurationInput.value = '1.0';
+    loopDurationValue.textContent = '1.0';
+    
     loopDurationInput.addEventListener('input', () => {
         const value = parseFloat(loopDurationInput.value).toFixed(1);
-        loopDurationValue.textContent = `${value}`; // Now loopDurationValue is defined
+        loopDurationValue.textContent = `${value}`;
         window.showStatus(`Loop duration set to ${value} min.`, 'info');
     });
-
     
     // Initialize with the correct display value
     loopDurationValue.textContent = `${parseFloat(loopDurationInput.value).toFixed(1)}`;
