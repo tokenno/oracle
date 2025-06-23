@@ -7,21 +7,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     <!-- Uncomment for local p5.js -->
     <!-- <script src="p5.min.js"></script> -->
-    <style>
-   body {
-    margin: 0;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    overflow: hidden;
-    background: #000 !important;
-    font-family: 'monospace', monospace;
-    font-size: 10px;
-    color: #7bd3f7 !important;
-    user-select: none;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    box-sizing: border-box;
-    position: relative;
-}
+   <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000 !important;
+            font-family: 'monospace', monospace;
+               font-size: 10px;
+            color: #7bd3f7 !important;
+            user-select: none;
+        }
         #fractal-container {
             position: absolute;
             width: 100vw;
@@ -142,12 +137,15 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background: rgba(0, 0, 0, 0.9) !important;
-   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    box-sizing: border-box;
+    padding: 15px;
     border-radius: 10px;
     border: 1px solid #7bd3f7;
+    z-index: 100;
+    min-width: 150px;
+    max-width: 90vw; /* Changed from fixed width to viewport width */
+    box-shadow: 0 0 20px rgba(123, 211, 247, 0.5);
+    display: none;
     transition: opacity 0.3s ease, transform 0.3s ease;
-    display: hide;
 }
         
         #control-panel[style*="display: none"] {
@@ -392,30 +390,32 @@
             background: rgba(123, 211, 247, 0.6);
             transform: scale(1.2);
         }
- #waveform-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 150px !important;
-    height: 150px !important;
-    border-radius: 50%;
-    overflow: hidden;
-    box-sizing: border-box;
-    background: rgba(0, 0, 0, 0.7) !important;
-    box-shadow: 0 0 20px rgba(123, 211, 247, 0.7);
-    display: none;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
-
-#waveform-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-}
+        #waveform-container {
+            position: fixed;
+            top: calc(50% - 1px);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px !important;
+            height: 60px !important;
+            z-index: 50;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+            background: rgba(0, 0, 0, 0.7) !important;
+            border-radius: 0px;
+            border: 0px solid #7bd3f7;
+            box-shadow: 0 0 20px rgba(123, 211, 247, 0.5);
+            display: none;
+        }
+        #waveform-container:hover {
+            opacity: 1;
+        }
+        #waveform-canvas {
+            position: fixed;
+            top: calc(50% - 1px);
+            left: 50%;
+            width: 100%;
+            height: 100%;
+        }
         #logo {
             position: absolute;
             left: 50%;
