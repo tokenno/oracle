@@ -516,6 +516,88 @@
     0% { opacity: 0.3; }
     100% { opacity: 1; }
 }
+        /* ===== RESPONSIVE DESIGN ===== */
+
+/* Small mobile devices */
+@media (max-width: 600px) {
+  #control-panel,
+  #file-inputs,
+  #status-display,
+  #audio-player-container {
+    width: 90vw !important;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+  }
+
+  .parameter-node {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 8px;
+  }
+
+  .node-tooltip {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+
+  .control-group input,
+  .control-group select {
+    font-size: 10px;
+    padding: 4px;
+  }
+
+  button,
+  .button-group button {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+
+  .upload-area {
+    font-size: 12px;
+    padding: 15px;
+  }
+
+  #waveform-container {
+    width: 100px !important;
+    height: 100px !important;
+  }
+
+  #audio-mandala {
+    width: 85vmin !important;
+    height: 85vmin !important;
+  }
+}
+
+/* Larger desktops and high-res screens */
+@media (min-width: 1200px) {
+  #control-panel,
+  #file-inputs {
+    max-width: 600px;
+    padding: 20px;
+  }
+
+  .parameter-node {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 12px;
+  }
+
+  .node-tooltip {
+    font-size: 11px;
+  }
+
+  #waveform-container {
+    width: 180px !important;
+    height: 180px !important;
+  }
+
+  #audio-mandala {
+    width: 95vmin !important;
+    height: 95vmin !important;
+  }
+}
+
     </style>
 </head>
 <body>
