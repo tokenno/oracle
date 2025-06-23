@@ -391,25 +391,34 @@
             background: rgba(123, 211, 247, 0.6);
             transform: scale(1.2);
         }
-        #waveform-container {
-            position: fixed;
-            top: calc(50% - 1px);
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-            background: rgba(0, 0, 0, 0.7) !important;
-               width: 150px !important;  /* Adjust size as needed */
+             #waveform-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px !important;
     height: 150px !important;
     border-radius: 50%;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(123, 211, 247, 0.7);
-            display: none;
-        }
-        #waveform-container:hover {
+    z-index: 50;
+    /* Mobile-specific adjustments */
+    max-width: 40vw;
+    max-height: 40vw;
+     opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+    #waveform-container {
+        width: 120px !important;
+        height: 120px !important;
+        top: 60%; /* Adjust vertical position for mobile */
+    }
+
+   #waveform-container:hover {
             opacity: 1;
         }
+     
       #waveform-canvas {
   position: absolute; /* ✅ Stay inside parent */
   top: 0;
@@ -1432,45 +1441,56 @@ if (loopDurationInput && loopDurationValue) {
             }
 
             // Scrolling waveform
-            let waveformSketch = function(p) {
-                let dataArray;
-                let bufferLength;
+           let waveformSketch = function(p) {
+    let dataArray;
+    let bufferLength;
+    let size;
+    
+    p.setup = function() {
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        size = isMobile ? 120 : 150;
+        
+        let canvas = p.createCanvas(size, size);
+        canvas.parent('waveform-container');
+        p.background(0);
+        
+        if (analyser) {
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+        }
+    };
 
-                p.setup = function() {
-                    console.log('Waveform sketch setup started');
-                    let canvas = p.createCanvas(150, 150);
-                    canvas.id('waveform-canvas'); 
-                    canvas.parent('waveform-container');
-                    p.background(0);
-                    if (analyser) {
-                        bufferLength = analyser.fftSize;
-                        dataArray = new Uint8Array(bufferLength);
-                    } else {
-                        console.error('Analyser not found in waveform setup');
-                    }
-                    console.log('Waveform sketch setup complete');
-                };
-
-                p.draw = function() {
-                    if (!audio || audio.paused || !analyser) {
-                        p.background(0);
-                        return;
-                    }
-                    console.log('Drawing waveform');
-                    p.push();
-                    let img = p.get(1, 0, p.width - 1, p.height);
-                    p.background(0);
-                    p.image(img, 0, 0);
-                    analyser.getByteTimeDomainData(dataArray);
-                    p.stroke(123, 211, 247);
-                    p.strokeWeight(1);
-                    p.noFill();
-                    let x = p.width - 1;
-                    let y = p.map(dataArray[0], 0, 255, p.height, 0);
-                    p.line(x, p.height / 2, x, y);
-                    p.pop();
-                };
-            };
+    p.draw = function() {
+        if (!audio || audio.paused || !analyser) {
+            p.background(0);
+            return;
+        }
+        
+        p.background(0);
+        analyser.getByteTimeDomainData(dataArray);
+        
+        const centerX = size/2;
+        const centerY = size/2;
+        const maxRadius = size/2 * 0.85;
+        
+        p.noFill();
+        p.stroke(123, 211, 247);
+        p.strokeWeight(window.matchMedia("(max-width: 768px)").matches ? 1 : 1.5);
+        
+        p.beginShape();
+        for (let i = 0; i < bufferLength; i++) {
+            const angle = p.map(i, 0, bufferLength, 0, p.TWO_PI);
+            const amplitude = dataArray[i] / 128.0 - 1;
+            const r = maxRadius * (1 + amplitude * 0.5);
+            
+            const x = centerX + p.cos(angle) * r;
+            const y = centerY + p.sin(angle) * r;
+            
+            p.curveVertex(x, y);
+        }
+        p.endShape(p.CLOSE);
+    };
+};
 
             // Add random glowing effect for parameter nodes when audio plays
             let animationFrameId = null;
