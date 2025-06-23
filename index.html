@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>o r a c L e</title>
+    <title>World Receiver</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     <!-- Uncomment for local p5.js -->
     <!-- <script src="p5.min.js"></script> -->
@@ -12,8 +13,7 @@
             margin: 0;
             overflow: hidden;
             background: #000 !important;
-            font-family: 'monospace', monospace;
-               font-size: 10px;
+            font-family: 'Arial', sans-serif;
             color: #7bd3f7 !important;
             user-select: none;
         }
@@ -26,12 +26,6 @@
             align-items: center;
             z-index: 0;
         }
-        a:link {
-  color: green;
-  background-color: transparent;
-  text-decoration: none;
-}
-        
         #fractal-canvas {
             position: absolute;
             top: 0;
@@ -46,8 +40,8 @@
         }
         .parameter-node {
             position: absolute;
-            width: 40px !important;
-            height: 40px !important;
+            width: 30px !important;
+            height: 30px !important;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             cursor: pointer;
@@ -58,7 +52,6 @@
             font-size: 10px;
             z-index: 10;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
-        
         }
         .parameter-node:hover {
             transform: translate(-50%, -50%) scale(1.5);
@@ -72,7 +65,7 @@
             color: #7bd3f7;
             padding: 5px 10px;
             border-radius: 5px;
-            font-size: 10px;
+            font-size: 12px;
             white-space: nowrap;
             pointer-events: none;
             opacity: 0;
@@ -86,35 +79,18 @@
         .parameter-node:hover:not([data-clicked]) .node-tooltip {
             opacity: 1;
         }
-        .node-process {
-            width: 65px !important;
-            height: 65px !important;
-            font-size: 12px;
-            box-shadow: 0 0 15px currentColor !important;
-        }
-        
-           .node-file-inputs {
-            width: 55px !important;
-            height: 55px !important;
-            font-size: 12px;
-            box-shadow: 0 0 15px currentColor !important;
-        }
-        
-        
-        .node-player, .node-help, .node-waveform {
-            width: 35px !important;
-            height: 35px !important;
-            font-size: 11px;
-            box-shadow: 0 0 12px currentColor !important;
-        }
-        
-         .node-stop {
+        .node-process, .node-file-inputs {
             width: 50px !important;
             height: 50px !important;
+            font-size: 12px;
+            box-shadow: 0 0 15px currentColor !important;
+        }
+        .node-player, .node-stop, .node-help, .node-waveform {
+            width: 40px !important;
+            height: 40px !important;
             font-size: 11px;
             box-shadow: 0 0 12px currentColor !important;
         }
-        
         .node-waveform {
             animation: slow-glow 4s ease-in-out infinite;
         }
@@ -131,35 +107,26 @@
             z-index: 1;
             opacity: 0.3;
         }
-#control-panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9) !important;
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid #7bd3f7;
-    z-index: 100;
-    min-width: 150px;
-    max-width: 90vw; /* Changed from fixed width to viewport width */
-    box-shadow: 0 0 20px rgba(123, 211, 247, 0.5);
-    display: none;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-        
-        #control-panel[style*="display: none"] {
-    opacity: 0;
-    transform: scale(0.9);
-}
-        
+        #control-panel {
+            position: fixed;
+            top: 20%;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9) !important;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #7bd3f7;
+            z-index: 100;
+            min-width: 250px;
+            box-shadow: 0 0 20px rgba(123, 211, 247, 0.5);
+            display: none;
+        }
         .control-group {
             margin-bottom: 10px;
             position: relative;
         }
         .control-group label {
             color: #7bd3f7;
-            font-size: 10px;
+            font-size: 12px;
             margin-bottom: 5px;
             display: block;
         }
@@ -199,30 +166,27 @@
         .control-group:hover .tooltip {
             opacity: 1;
         }
-#status-display {
-    position: fixed; /* Changed from absolute to fixed */
-    top: 50%; /* Changed from bottom to top */
-    left: 50%;
-    transform: translate(-50%, -50%); /* Added Y-axis translation */
-    background: rgba(0, 0, 0, 0.9) !important;
-    padding: 15px; /* Slightly more padding like control-panel */
-    border-radius: 10px; /* Larger radius like control-panel */
-    border: 1px solid #7bd3f7;
-    max-width: 200px; /* Similar to control-panel */
-    text-align: center;
-    z-index: 100;
-    pointer-events: none;
-    font-size: 12px; /* Slightly smaller text */
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease; /* Added transform transition */
-    box-shadow: 0 0 20px rgba(123, 211, 247, 0.5); /* Added glow like control-panel */
-}
-
-#status-display[style*="display: block"] {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1); /* Added scale animation */
-}
+        #status-display {
+            position: absolute;
+            bottom: 60%;
+            left: 91%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9) !important;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: 1px solid #7bd3f7;
+            max-width: 80%;
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+            font-size: 14px;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #status-display[style*="display: block"] {
+            opacity: 1;
+        }
         #file-inputs {
             position: fixed;
             top: 50%;
@@ -284,47 +248,15 @@
             cursor: pointer;
             font-size: 12px;
             transition: all 0.3s;
-                align-items: center;
         }
         button:hover:not(:disabled) {
             background: rgba(123, 211, 247, 0.6);
             box-shadow: 0 0 10px rgba(123, 211, 247, 0.7);
-                align-items: center;
         }
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-                align-items: center;
         }
-        
-.button-group button:hover:not(:disabled) {
-    background: rgba(123, 211, 247, 0.6);
-    box-shadow: 0 0 10px rgba(123, 211, 247, 0.7);
-}
-
-.button-group button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-/* For side-by-side buttons */
-.button-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-.button-group button {
-    width: 150px;
-    padding: 8px 15px;
-    background: rgba(123, 211, 247, 0.3);
-    color: #7bd3f7;
-    border: 1px solid #7bd3f7;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.3s;
-}
         #audio-player-container {
             position: fixed;
             top: 60%;
@@ -402,7 +334,7 @@
             transition: opacity 0.3s;
             background: rgba(0, 0, 0, 0.7) !important;
             border-radius: 0px;
-            border: 0px solid #7bd3f7;
+            border: 1px solid #7bd3f7;
             box-shadow: 0 0 20px rgba(123, 211, 247, 0.5);
             display: none;
         }
@@ -462,8 +394,8 @@
         }
         #close-help {
             position: absolute;
-            top: 2px;
-            right: 2px;
+            top: -15px;
+            right: -15px;
             width: 30px;
             height: 30px;
             background: rgba(247, 123, 211, 0.3);
@@ -507,14 +439,6 @@
             animation: ripple 1s linear;
             z-index: 5;
         }
-.parameter-node.blinking {
-    animation: random-blink var(--blink-duration) infinite alternate;
-}
-
-@keyframes random-blink {
-    0% { opacity: 0.3; }
-    100% { opacity: 1; }
-}
     </style>
 </head>
 <body>
@@ -567,17 +491,11 @@
                 </select>
                 <span class="tooltip">Adjust number of audio tracks (2-10)</span>
             </div>
-       <div class="control-group" id="control-project-bpm" style="display: none;">
-    <label for="project-bpm-slider">Project BPM: <span id="bpm-value">120</span></label>
-    <input type="range" 
-           id="project-bpm-slider" 
-           min="40" 
-           max="240" 
-           value="120"
-           step="1"
-           oninput="document.getElementById('bpm-value').textContent = this.value + ' BPM'; window.projectBPM = parseInt(this.value);">
-    <span class="tooltip">Adjust tempo (40-240 BPM)</span>
-</div>
+            <div class="control-group" id="control-project-bpm" style="display: none;">
+                <label for="project-bpm">Project BPM:</label>
+                <input type="number" id="project-bpm" value="120" min="60" max="240">
+                <span class="tooltip">Set project tempo (60-240 BPM)</span>
+            </div>
             <div class="control-group" id="control-max-blend" style="display: none;">
                 <label for="max-blend">Max Blend (%):</label>
                 <input type="range" id="max-blend" min="0" max="100" value="50">
@@ -628,22 +546,6 @@
                     <option value="pentatonic">Pentatonic</option>
                     <option value="blues">Blues</option>
                     <option value="chromatic">Chromatic</option>
-                      <label for="musical-scale">Exerimental:</label>
-                          <option value="twelveToneRow">twelveToneRow</option>
-                    <option value="ligeti">Ligeti</option>
-                       <option value="bartok">Bartok</option>
-                    <option value="messiaen3">Messiaen3</option>
-                    <option value="pelog">Pelog</option>
-                    <option value="slendro">Slendro</option>
-                    <option value="partch43">Harry Partch</option>
-                    <option value="hexany">Hexany</option>
-                    <option value="slendro">Slendro</option>
-                    <option value="alpha">Alpha</option>
-                       <option value="enigmatic">Enigmatic</option>
-                    <option value="prometheus">Prometheus</option>
-                             <option value="wholeTone">WholeTone</option>
-                    <option value="octatonic">Octatonic</option>
-                 
                 </select>
                 <span class="tooltip">Select musical scale for filtering</span>
             </div>
@@ -656,12 +558,12 @@
                 </select>
                 <span class="tooltip">Define scale adjustment behavior</span>
             </div>
-      <div class="control-group" id="control-playback-rate" style="display: none;">
-    <label for="playback-rate">Playback Rate:</label>
-   <input type="range" id="playback-rate" min="0.1" max="2" step="0.01" value="1.0">
-<span id="playback-rate-value">1.00x</span>
- <span class="tooltip">Adjust playback speed (10%–200%)</span>
-</div>
+            <div class="control-group" id="control-playback-rate" style="display: none;">
+                <label for="playback-rate">Playback Rate:</label>
+                <input type="range" id="playback-rate" min="0.5" max="2" step="0.01" value="1.0">
+                <span id="playback-rate-value">1.00x</span>
+                <span class="tooltip">Adjust playback speed</span>
+            </div>
             <div class="control-group" id="control-preserve-pitch" style="display: none;">
                 <label for="preserve-pitch">Preserve Pitch:</label>
                 <input type="checkbox" id="preserve-pitch" checked>
@@ -673,13 +575,13 @@
                 <span id="silence-value">10%</span>
                 <span class="tooltip">Add silence between tracks</span>
             </div>
-      <div class="control-group" id="control-process" style="display: none;">
-    <div class="button-group">
-        <button id="process-btn">PROCESS AUDIO</button>
-        <button id="download-btn" disabled>MIX DOWNLOAD</button>
-    </div>
-    <span class="tooltip">Audio processing controls</span>
-</div>
+            <div class="control-group" id="control-process" style="display: none;">
+                <button id="process-btn">Process Audio</button>
+                <button id="test-tone-btn">Test Tone</button>
+                <button id="download-btn" disabled>Download Mix</button>
+                <button id="stop-btn" disabled>Stop Playback</button>
+                <span class="tooltip">Audio processing controls</span>
+            </div>
         </div>
         <div id="file-inputs">
             <div class="upload-area">Drag and drop audio files or click to select</div>
@@ -702,17 +604,19 @@
     </div>
     <script src="app.js"></script>
     <script>
+        // Load manual content into help panel
         const helpContent = document.getElementById('help-content');
         const helpPanel = document.getElementById('help-panel');
         const closeHelp = document.getElementById('close-help');
-        const manualContent = `
-<h1>[ o r a c L e ]</h1>
 
+        // Manual content (Markdown rendered as HTML)
+        const manualContent = `
+<h1>World Receiver User Manual</h1>
+<p><em>Welcome to the World Receiver, a sonic mandala for crafting immersive audio experiences. Harness the power of sound manipulation in a futuristic interface glowing with cybernetic elegance.</em></p>
 <h2>Overview</h2>
-<p>The <strong>o r a c L e</strong> is an audio processing tool that blends multiple audio tracks into a cohesive mix.</p>
+<p>The <strong>World Receiver</strong> is an interactive audio processing tool that blends multiple audio tracks into a cohesive mix, visualized through a dynamic mandala interface. Adjust parameters like tempo, reverb, and playback rate, and watch the mandala pulse with your creations. Upload audio files, tweak settings, and download your masterpiece—all within a sleek, neon-lit environment.</p>
 <h2>Interface Elements</h2>
-<p>The app is centered around a mandala with interactive nodes, each controlling a specific function. Based on frequency  (FFT) and tempo analysis, in combination with user's adjustments of specific algorithmic functions, new soundscapes emerge. <BR> <BR> The functions of <strong> silences and mix blending, </strong> together with  <strong>Scale Selection, Scale Behavior and Playback Order, </strong> helps the [ o r a c L e ] to predict new soundscapes. </p>
-<p>For sound artists, [ o r a c L e ] becomes a dynamic playground for sonic experimentation. By blending algorithmic processing with intuitive controls, it transforms raw audio into evolving soundscapes. Real-time processing and generative algorithms act as a creative collaborator, revealing hidden musical structures in uploaded samples. Whether crafting minimalistic sonic textures, ambient beds, rhythmic glitches or microtonal collages, the app rewards curiosity with unexpected results, making it a tool for both intentional composition and happy accidents. </p>
+<p>The app is centered around a glowing mandala with interactive nodes, each controlling a specific function. The background fractal canvas and logo pulse in sync with your audio, creating a mesmerizing experience.</p>
 <h3>Key Components</h3>
 <ul>
     <li><strong>Mandala Nodes</strong>: Circular controls around the central mandala, each tied to a parameter or action (e.g., track count, BPM, file uploads). Hover over a node to see its tooltip explanation (shown only until the node is first clicked).</li>
@@ -725,31 +629,7 @@
     <li><strong>Waveform Node</strong>: A slowly pulsing node to toggle the waveform display.</li>
     <li><strong>o r a c L e Logo</strong>: A pulsating centerpiece tying the interface together.</li>
 </ul>
-<h2>How to Use</h2>
-    <li><strong>BEST METHOD:</strong> Start from the <strong>Number of Tracks Node</strong> (first Node on your right - see Tooltip) and follow the Nodes of the mandala down in series until you reach the <strong>Process Audio</strong> Node. Adjust settings as you go. </li>
-
-<li><strong>IMPORTANT:</strong> While learning the app, import sounds with a <strong>clear pitch and small in size</strong> (less than 10Mb). Some piano sounds samples are linked at the end of this Help to try. After you get familiarized with the app's logic, try more complex sounds. </li>
-
-<li>Set <strong>MAX BLEND</strong> around 80%. A basic feature of the app.</li>
-
-
-<li>Set <strong>Loop Time around ONE minute</strong> to render quicker (Default 5 minutes). <strong></li>
-
-<li>Check Loop</strong> on each track before Process Audio.</li>
-
-<li>Press <strong>Process Audio</strong> and wait to hear a new soundscape to emerge (Depending of the Loop Length Node and the size of the tracks, rendering times can vary.  </li>
-
-<li>Wait until 'Process Audio...Please Wait' message clears. Then sound starts automatically.</li>
-
-
-<li><strong>Experiment:</strong> Try different settings with the same imported sounds and observe sound differencies. </li>
-
-<li><strong>REALTIME:</strong> The [ o r a c L e ] predicts sounds in REALTIME. After rendering, play with available parameters and notice changes in the soundscape. </li>
-
-<li><strong>Alternative:</strong> Just set the number of tracks, import accordingly, check Loops on each one and hit Process Audio... Then just <strong>Play</strong> </li>
-
-<h2>Features</h2>
-
+<h2>Features and How to Use</h2>
 <h3>1. Uploading Audio Files</h3>
 <ul>
     <li><strong>Access</strong>: Click the <strong>Upload Files</strong> node (yellow-green, labeled "Upload Files"). Hover to see its tooltip before clicking.</li>
@@ -767,7 +647,7 @@
     <li><strong>Reverb Time (0.1–5s)</strong>: Sets reverb decay length.</li>
     <li><strong>Loop Duration (0.1–10 min)</strong>: Defines the output mix duration.</li>
     <li><strong>Algorithm</strong>: Chooses track ordering (e.g., Sequential, Random, Markov Chain, Scale-based, Frequency-based, Tempo-based).</li>
-    <li><strong>Musical Scale</strong>: Filters tracks by scale (e.g., Major, Minor, Pentatonic and mnay more exotic scales).</li>
+    <li><strong>Musical Scale</strong>: Filters tracks by scale (e.g., Major, Minor, Pentatonic).</li>
     <li><strong>Scale Behavior</strong>: Defines scale application (Filter, Transpose, Reorder).</li>
     <li><strong>Playback Rate (0.5–2x)</strong>: Adjusts playback speed.</li>
     <li><strong>Preserve Pitch</strong>: Maintains pitch when changing playback rate (checked by default).</li>
@@ -789,10 +669,8 @@
             <li><strong>Play/Pause</strong>: Use the audio player's built-in controls.</li>
             <li><strong>Stop</strong>: Click the <strong>Stop Audio</strong> node (magenta, labeled "Stop Audio") or the stop button (■) on the player to stop and reset playback.</li>
             <li><strong>Close Player</strong>: Click the close button (×) on the player to hide it.</li>
- <li><strong>IMPORTANT</strong>: The app accepts files of any Sampling Rate with a file limit of 50Mb. </li>
      <li><strong>IMPORTANT</strong>: Wait until 'Audio Rendering Complete' to hear the final output. Large files takes time to process. </li>
  <li><strong>IMPORTANT</strong>: Start with small loop times, e.g 1 minute (default 5 minutes) and also start with small file size (less than 10Mb.</li>
-<li><strong>IMPORTANT</strong>: Depending of the audio content and Pitch Detection algorithm used (Filter, Transpose, Reorder), Process Audio may not be able to continue.</li>
  <li><strong>More:</strong>: When you get the app's logic, move to larger times and sizes (expect long rendering times)</li>
         </ul>
     </li>
@@ -810,104 +688,12 @@
     <li><strong>Action</strong>: Downloads the processed mix as a WAV file named "mixed-audio.wav".</li>
     <li><strong>Status</strong>: Shows "Downloading mix..." during the process.</li>
 </ul>
-<h3>Scale Behavior with Imported Audio</h3>
-<p>The Scale Behavior options transform your audio files in different musical ways:</p>
-
+<h3>7. Testing Audio Output</h3>
 <ul>
-    <li><strong>Filter</strong>:
-        <ul>
-            <li>Only keeps audio files that match the selected scale</li>
-            <li>Files not in the scale are removed from the mix</li>
-            <li>Best for curated collections where you want strict harmonic consistency</li>
-            <li>Example: In C Major scale, only files detected as C, D, E, F, G, A, or B will be used</li>
-        </ul>
-    </li>
-    
-    <li><strong>Transpose</strong>:
-        <ul>
-            <li>Automatically shifts pitches of all files to match the selected scale</li>
-            <li>Preserves the original character while ensuring harmonic compatibility</li>
-            <li>May cause slight artifacts with complex/polyphonic audio</li>
-            <li>Example: A D# file would be transposed to D in C Major scale</li>
-        </ul>
-    </li>
-    
-    <li><strong>Reorder</strong>:
-        <ul>
-            <li>Keeps all files but rearranges them in scale order</li>
-            <li>Files in-scale appear first, followed by out-of-scale files</li>
-            <li>Creates a musically ascending/descending progression</li>
-            <li>Example: Files would play as C, D, E, F, then any remaining files</li>
-        </ul>
-    </li>
+    <li><strong>Access</strong>: In the control panel, click the <strong>Test Tone</strong> button.</li>
+    <li><strong>Action</strong>: Plays a 440Hz sine wave for 1 second to test audio output.</li>
+    <li><strong>Status</strong>: Shows "Playing test tone."</li>
 </ul>
-
-<p><strong>Detection Method</strong>: The system analyzes each file's:
-    <ul>
-        <li>Spectral centroid (dominant frequency)</li>
-        <li>Filename for key hints (e.g., "C_Melody.wav")</li>
-        <li>Harmonic content via FFT analysis</li>
-    </ul>
-</p>
-
-<h3>Algorithm Behavior with Imported Audio</h3>
-<p>The Algorithm determines how your files are sequenced in the mix:</p>
-
-<ul>
-    <li><strong>Sequential</strong>:
-        <ul>
-            <li>Plays files in upload order (Track 1 → Track 2 → etc.)</li>
-            <li>Creates predictable, structured mixes</li>
-        </ul>
-    </li>
-    
-    <li><strong>Random</strong>:
-        <ul>
-            <li>Shuffles files with no repeating pattern</li>
-            <li>Produces unexpected combinations each time</li>
-        </ul>
-    </li>
-    
-    <li><strong>Markov Chain</strong>:
-        <ul>
-            <li>Creates semi-random sequences based on transition probabilities</li>
-            <li>Learns patterns from your file characteristics</li>
-            <li>Balances randomness with musical flow</li>
-        </ul>
-    </li>
-    
-    <li><strong>Scale-based Order</strong>:
-        <ul>
-            <li>Ascending: Low notes → high notes in the scale</li>
-            <li>Descending: High notes → low notes in the scale</li>
-            <li>Creates melodic progressions</li>
-        </ul>
-    </li>
-    
-    <li><strong>Frequency-based Order</strong>:
-        <ul>
-            <li>Ascending: Darker sounds → brighter sounds</li>
-            <li>Descending: Bright sounds → dark sounds</li>
-            <li>Creates timbral evolution</li>
-        </ul>
-    </li>
-    
-    <li><strong>Tempo-based Order</strong>:
-        <ul>
-            <li>Ascending: Slower BPM → faster BPM</li>
-            <li>Descending: Faster BPM → slower BPM</li>
-            <li>Creates rhythmic development</li>
-        </ul>
-    </li>
-</ul>
-
-<p><strong>Pro Tip</strong>: Combine Scale Behavior with Algorithms for powerful results:
-    <ul>
-        <li>Filter + Markov Chain = Cohesive yet surprising harmonic mixes</li>
-        <li>Transpose + Scale Order = Perfect ascending/descending melodies</li>
-        <li>Reorder + Frequency Order = Evolving timbral landscapes</li>
-    </ul>
-</p>
 <h3>8. Visual Feedback</h3>
 <ul>
     <li><strong>Mandala</strong>: Nodes glow and pulse when clicked or during audio playback, with colors matching their function (e.g., cyan for player, purple for waveform).</li>
@@ -929,37 +715,14 @@
     <li><strong>Browser Compatibility</strong>: Use a modern browser (Chrome, Firefox) with Web Audio API support.</li>
     <li><strong>Responsive Design</strong>: The interface adapts to window size, but nodes may reposition on resize.</li>
 </ul>
-<h2>Precautions</h2>
-<ul>
-    <li><strong>File Size - Type Limits</strong>: Maximum File Size: 50MB per file (hardcoded limit). Supported Formats: WAV (Any Sampling Rate and Bit Depth, however stay at 44.1, 16Bit for quicker rendering), MP3, OGG. </li>
-  <li><strong>Browser-Specific Issues</strong>: Safari: May have issues with Web Audio API timing, however webkitAudioContext fallback is included. Mobile Browsers: Auto-play restrictions (audio must start via user gesture) and  Limited memory for large files.</li>
-    <li><strong>Avoid</strong>: Silent Files (will fail validation). Corrupted Headers (WAV/MP3 with bad metadata). Very Short Files (<0.5s may break BPM detection). Keep in mind that Polyphonic Music pitch detection works best on monophonic sounds.</li>
-    <li><strong>Memory Intensive Operations</strong>: Avoid processing multiple long files simultaneously. Extreme reverb times (>5s). High track counts (8+) with long loops (>5min).</li>
-</ul>
 <h2>Troubleshooting</h2>
 <ul>
     <li><strong>No Status Messages</strong>: Ensure JavaScript is enabled. Check the console (F12) for errors.</li>
-  <li><strong>Invalid Audio Buffer</strong>: A common issue where one of the uploaded files is larger in time than the selected Loop Time. Upload another file or adjust Loop Time.</li>
     <li><strong>Audio Not Playing</strong>: Verify files are valid and audio output is not muted.</li>
     <li><strong>Processing Fails</strong>: Check if all tracks are uploaded and parameters are valid.</li>
     <li><strong>Nodes Not Responding</strong>: Refresh the page and ensure the browser window is focused.</li>
 </ul>
-<h2>Links to Audio Files For Testing</h2>
-<ul>
-
-<h2>Comments, Bugs, Suggestions</h2>
-<ul>
-    <li><strong>Contact</strong>: tokenomusic@gmail.com </li>
-    <li><a href="http://tokeno.net"  style="color:yellow;"> Visit tokeno.net</a></li>
-
-</ul>
-<h2>Links to Audio Files For Testing</h2>
-<ul>
-  
-    <li><a href="https://github.com/tokenno/oracle/tree/main/mp3" style="color:yellow;"> Test Audio Files for five tracks.</a></li>
- 
-</ul>
-<p><em>tokeno.net [ o r a c L e ]</em></p>
+<p><em>Craft your sonic universe with the World Receiver. Let the mandala guide your creativity.</em></p>
         `;
 
         helpContent.innerHTML = manualContent;
@@ -969,11 +732,11 @@
             if (window.p5) loop();
         });
 
-        // Error Handling... 
+        // Error handling wrapper
         try {
             console.log('Script execution started');
 
-            // Mandala background
+            // p5.js sketch for mandala background
             function setup() {
                 console.log('p5 setup started');
                 let canvas = createCanvas(windowWidth, windowHeight);
@@ -1016,79 +779,6 @@
             function windowResized() {
                 resizeCanvas(windowWidth, windowHeight);
             }
-            
-            let isBlinkingActive = false;
-let blinkIntervals = [];
-            
-function calculateBlinkSpeed() {
-    const bpm = parseInt(document.getElementById('project-bpm-slider')?.value) || 120;
-    const playbackRate = parseFloat(document.getElementById('playback-rate')?.value) || 1.0;
-    
-    // Base blink duration (ms) 
-    const baseDuration = 500; 
-    
-    // Adjust based on BPM 
-    let duration = baseDuration * (120 / bpm);
-    
-    // Adjust based on playback rate (faster playback = faster blinks)
-    duration /= playbackRate;
-    
-    // Clamp between 100ms and 1000ms
-    return Math.max(100, Math.min(1000, duration));
-}
-
-function startTempoSyncedBlinking() {
-    const nodes = document.querySelectorAll('.parameter-node:not(#node-waveform)');
-    if (!nodes.length) return;
-    
-    stopNodeBlinking();
-    isBlinkingActive = true;
-    
-    const blinkNode = () => {
-        if (!isBlinkingActive) return;
-        
-        // Calculate dynamic blink speed
-        const blinkDuration = calculateBlinkSpeed();
-        
-        // Clear all blinking first
-        nodes.forEach(node => node.classList.remove('blinking'));
-        
-        // Select a random node (70% chance)
-        if (Math.random() > 0.3) {
-            const randomIndex = Math.floor(Math.random() * nodes.length);
-            const node = nodes[randomIndex];
-            const nodeColor = getComputedStyle(node).getPropertyValue('color').trim() || 'rgba(255, 255, 255, 0.8)';
-            
-            // Set dynamic properties
-            node.style.setProperty('--glow-color', nodeColor);
-            node.style.setProperty('--blink-duration', `${blinkDuration}ms`);
-            node.classList.add('blinking');
-            
-            // Remove blink after duration
-            setTimeout(() => {
-                node.classList.remove('blinking');
-            }, blinkDuration);
-        }
-        
-        // Schedule next blink with tempo-synced timing
-        const nextBlinkDelay = blinkDuration * (0.5 + Math.random() * 0.5); // 50-100% of blink duration
-        const interval = setTimeout(blinkNode, nextBlinkDelay);
-        blinkIntervals.push(interval);
-    };
-    
-    blinkNode();
-}
-
-// Update Stoop Function
-function stopNodeBlinking() {
-    console.log('Stopping all node blinking');
-    isBlinkingActive = false;
-    blinkIntervals.forEach(interval => clearTimeout(interval));
-    blinkIntervals = [];
-    document.querySelectorAll('.parameter-node').forEach(node => {
-        node.classList.remove('blinking');
-    });
-}
 
             // Position nodes dynamically
             const nodes = document.querySelectorAll('.parameter-node');
@@ -1120,152 +810,123 @@ function stopNodeBlinking() {
             positionNodes();
             window.addEventListener('resize', positionNodes);
 
+            // Node interactions
+            const controlPanel = document.getElementById('control-panel');
+            const fileInputs = document.getElementById('file-inputs');
+            const audioPlayer = document.getElementById('audio-player-container');
+            const waveformContainer = document.getElementById('waveform-container');
+            const closePlayer = document.getElementById('close-player');
+            const stopAudioBtn = document.getElementById('stop-audio-btn');
+            const helpPanel = document.getElementById('help-panel');
+            const connections = document.querySelectorAll('.node-connection');
 
-      // Node interactions
-const controlPanel = document.getElementById('control-panel');
-const fileInputs = document.getElementById('file-inputs');
-const audioPlayer = document.getElementById('audio-player-container');
-const waveformContainer = document.getElementById('waveform-container');
-const closePlayer = document.getElementById('close-player');
-const stopAudioBtn = document.getElementById('stop-audio-btn');
-const helpPanel = document.getElementById('help-panel');
-const connections = document.querySelectorAll('.node-connection');
+            if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && waveformContainer && stopAudioBtn && helpPanel) {
+                console.log('Node interactions initialized');
+                nodes.forEach(node => {
+                    node.addEventListener('click', (e) => {
+                        console.log('Node clicked:', node.id);
+                        // Mark node as clicked to disable tooltip
+                        node.setAttribute('data-clicked', 'true');
+                        document.querySelectorAll('.node-tooltip').forEach(tooltip => {
+                            tooltip.style.opacity = '0';
+                        });
 
-if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && waveformContainer && stopAudioBtn && helpPanel) {
-    console.log('Node interactions initialized');
-    
-    // Track currently active node
-    let activeNode = null;
-    
-    nodes.forEach(node => {
-        const tooltip = node.querySelector('.node-tooltip');
-        
-        // Show tooltip on hover (only if node hasn't been clicked)
-        node.addEventListener('mouseenter', () => {
-            if (node !== activeNode) {
-                tooltip.style.opacity = '1';
-            }
-        });
-        
-        // Hide tooltip when mouse leaves
-        node.addEventListener('mouseleave', () => {
-            tooltip.style.opacity = '0';
-        });
-        
-        node.addEventListener('click', (e) => {
-            console.log('Node clicked:', node.id);
-            
-            // Check if this node is already active
-            const wasActive = node === activeNode;
-            
-            // Hide all tooltips
-            document.querySelectorAll('.node-tooltip').forEach(t => {
-                t.style.opacity = '0';
-            });
+                        nodes.forEach(n => n.classList.remove('active'));
+                        node.classList.add('active');
+                        document.querySelectorAll('.control-group').forEach(c => c.style.display = 'none');
+                        const controlId = `control-${node.id.replace('node-', '')}`;
+                        const control = document.getElementById(controlId);
+                        if (control) {
+                            control.style.display = 'block';
+                            controlPanel.style.display = 'block';
+                            fileInputs.style.display = 'none';
+                            helpPanel.style.display = 'none';
+                        }
+                        if (node.id === 'node-file-inputs') {
+                            fileInputs.style.display = 'block';
+                            controlPanel.style.display = 'none';
+                            helpPanel.style.display = 'none';
+                        }
+                        if (node.id === 'node-player') {
+                            const isVisible = audioPlayer.style.display === 'none';
+                            audioPlayer.style.display = isVisible ? 'block' : 'none';
+                            controlPanel.style.display = 'none';
+                            fileInputs.style.display = 'none';
+                            helpPanel.style.display = 'none';
+                        }
+                        if (node.id === 'node-waveform') {
+                            const isVisible = waveformContainer.style.display === 'none';
+                            waveformContainer.style.display = isVisible ? 'block' : 'none';
+                            controlPanel.style.display = 'none';
+                            fileInputs.style.display = 'none';
+                            helpPanel.style.display = 'none';
+                        }
+                        if (node.id === 'node-stop-audio') {
+                            console.log('Stop Audio node clicked');
+                            const audio = document.getElementById('mixed-audio');
+                            if (audio) {
+                                console.log('Attempting to stop audio');
+                                audio.pause();
+                                audio.currentTime = 0;
+                                if (window.stopPlayback) {
+                                    window.stopPlayback();
+                                    console.log('stopPlayback called');
+                                }
+                            } else {
+                                console.error('Mixed audio element not found');
+                            }
+                            controlPanel.style.display = 'none';
+                            fileInputs.style.display = 'none';
+                            helpPanel.style.display = 'none';
+                        }
+                        if (node.id === 'node-help') {
+                            helpPanel.style.display = 'block';
+                            controlPanel.style.display = 'none';
+                            fileInputs.style.display = 'none';
+                            audioPlayer.style.display = 'none';
+                            waveformContainer.style.display = 'none';
+                        }
 
-  // Hide Process Panel
-    document.getElementById('process-btn')?.addEventListener('click', function() {
-        controlPanel.style.display = 'none';
-        document.getElementById('node-process')?.classList.remove('active');
-    });
-            
-            // Remove active class from all nodes
-            nodes.forEach(n => n.classList.remove('active'));
-            
-            // Hide all panels
-            document.querySelectorAll('.control-group').forEach(c => c.style.display = 'none');
-            fileInputs.style.display = 'none';
-            helpPanel.style.display = 'none';
-            controlPanel.style.display = 'none';
-            audioPlayer.style.display = 'none';
-            waveformContainer.style.display = 'none';
-            
-            // Toggle behavior - if node was already active, deactivate it
-            if (!wasActive) {
-                activeNode = node;
-                node.classList.add('active');
-                
-                const controlId = `control-${node.id.replace('node-', '')}`;
-                const control = document.getElementById(controlId);
-                
-                if (node.id === 'node-file-inputs') {
-                    fileInputs.style.display = 'block';
-                } 
-                else if (node.id === 'node-player') {
-                    audioPlayer.style.display = 'block';
-                } 
-                else if (node.id === 'node-waveform') {
-                    waveformContainer.style.display = 'block';
-                } 
-                else if (node.id === 'node-help') {
-                    helpPanel.style.display = 'block';
-                }
-                else if (control) {
-                    control.style.display = 'block';
-                    controlPanel.style.display = 'block';
-                }
-            } else {
-                activeNode = null;
-            }
-            
-            if (node.id === 'node-stop-audio') {
-                console.log('Stop Audio node clicked');
-                const audio = document.getElementById('mixed-audio');
-                if (audio) {
-                    console.log('Attempting to stop audio');
-                    audio.pause();
-                    audio.currentTime = 0;
-                    if (window.stopPlayback) {
-                        window.stopPlayback();
-                        console.log('stopPlayback called');
+                        const ripple = document.createElement('div');
+                        ripple.className = 'ripple-effect';
+                        ripple.style.left = `${e.clientX}px`;
+                        ripple.style.top = `${e.clientY}px`;
+                        ripple.style.width = '30px';
+                        ripple.style.height = '30px';
+                        document.body.appendChild(ripple);
+                        setTimeout(() => ripple.remove(), 1000);
+
+                        if (window.p5) time += p5.prototype.random(1, 3);
+                    });
+                });
+
+                closePlayer.addEventListener('click', () => {
+                    audioPlayer.style.display = 'none';
+                    document.querySelectorAll('.node-tooltip').forEach(tooltip => {
+                        tooltip.style.opacity = '0';
+                    });
+                    if (window.p5) loop();
+                });
+
+                stopAudioBtn.addEventListener('click', () => {
+                    console.log('Stop button clicked');
+                    const audio = document.getElementById('mixed-audio');
+                    if (audio) {
+                        console.log('Attempting to stop audio via button');
+                        audio.pause();
+                        audio.currentTime = 0;
+                        if (window.stopPlayback) {
+                            window.stopPlayback();
+                            console.log('stopPlayback called from button');
+                        }
+                    } else {
+                        console.error('Mixed audio element not found in button click');
                     }
-                } else {
-                    console.error('Mixed audio element not found');
-                }
-            }
-
-            const ripple = document.createElement('div');
-            ripple.className = 'ripple-effect';
-            ripple.style.left = `${e.clientX}px`;
-            ripple.style.top = `${e.clientY}px`;
-            ripple.style.width = '30px';
-            ripple.style.height = '30px';
-            document.body.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 1000);
-
-            if (window.p5) time += p5.prototype.random(1, 3);
-        });
-    });
-
-    // Reset active node when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.parameter-node')) {
-            nodes.forEach(node => {
-                node.classList.remove('active');
-            });
-            activeNode = null;
-        }
-    });
-
-    // Rest of your existing code...
-    closePlayer.addEventListener('click', () => {
-        audioPlayer.style.display = 'none';
-        if (window.p5) loop();
-    });
-
-    stopAudioBtn.addEventListener('click', () => {
-        console.log('Stop button clicked');
-        const audio = document.getElementById('mixed-audio');
-        if (audio) {
-            console.log('Attempting to stop audio via button');
-            audio.pause();
-            audio.currentTime = 0;
-            if (window.stopPlayback) {
-                window.stopPlayback();
-                console.log('stopPlayback called from button');
-            }
-        }
-    });
+                    document.querySelectorAll('.node-tooltip').forEach(tooltip => {
+                        tooltip.style.opacity = '0';
+                    });
+                    if (window.p5) loop();
+                });
 
                 let trackCount = parseInt(document.getElementById('track-count')?.value) || 5;
                 const trackCountInput = document.getElementById('track-count');
@@ -1302,11 +963,10 @@ if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && wavefor
                         if (selectedFiles.length > 0) {
                             window.showStatus(`${selectedFiles.length}/${trackCount} tracks loaded.`, 'info');
                         }
-              if (selectedFiles.length >= trackCount) {
-    fileInputs.style.display = 'none';
-    document.getElementById('node-file-inputs')?.classList.remove('active'); // <-- Added this
-    document.querySelectorAll('.node-tooltip').forEach(tooltip => tooltip.style.opacity = '0');
-    window.showStatus('All tracks loaded. Ready to process.', 'success');
+                        if (selectedFiles.length >= trackCount) {
+                            fileInputs.style.display = 'none';
+                            document.querySelectorAll('.node-tooltip').forEach(tooltip => tooltip.style.opacity = '0');
+                            window.showStatus('All tracks loaded. Ready to process.', 'success');
                             if (window.p5) loop();
                             positionNodes();
                             updateConnections();
@@ -1370,7 +1030,7 @@ if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && wavefor
                 console.error('Required elements not found:', { nodes, controlPanel, fileInputs, audioPlayer, closePlayer, waveformContainer, stopAudioBtn, helpPanel });
             }
 
-            // Logo glow (not currently implemented) and waveform animation tied to audio output
+            // Logo glow and waveform animation tied to audio output
             const audio = document.getElementById('mixed-audio');
             const logo = document.getElementById('logo');
             let audioContext, analyser, source;
@@ -1419,7 +1079,7 @@ if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && wavefor
                 }
             }
 
-            // Scrolling waveform
+            // p5.js sketch for scrolling waveform
             let waveformSketch = function(p) {
                 let dataArray;
                 let bufferLength;
@@ -1500,7 +1160,7 @@ if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && wavefor
 
             audio.addEventListener('ended', () => {
                 console.log('Audio ended event triggered');
-               
+                // Hide waveform display after one loop
                 waveformContainer.style.display = 'none';
                 if (window.waveformInstance) {
                     window.waveformInstance.background(0);
