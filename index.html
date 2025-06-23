@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-     <link rel="manifest" href="/manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>o r a c L e</title>
@@ -391,7 +390,7 @@
             background: rgba(123, 211, 247, 0.6);
             transform: scale(1.2);
         }
-             #waveform-container {
+        #waveform-container {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -414,11 +413,11 @@
         height: 120px !important;
         top: 60%; /* Adjust vertical position for mobile */
     }
-
-   #waveform-container:hover {
+}
+        
+        #waveform-container:hover {
             opacity: 1;
         }
-     
       #waveform-canvas {
   position: absolute; /* ✅ Stay inside parent */
   top: 0;
@@ -1441,7 +1440,7 @@ if (loopDurationInput && loopDurationValue) {
             }
 
             // Scrolling waveform
-           let waveformSketch = function(p) {
+       let waveformSketch = function(p) {
     let dataArray;
     let bufferLength;
     let size;
@@ -1555,15 +1554,5 @@ if (loopDurationInput && loopDurationValue) {
             }
         }
     </script>
-        <script>
-       if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('SW registered:', reg))
-        .catch(err => console.log('SW registration failed:', err));
-    });
-  }
-    </script>
-  
 </body>
 </html>
