@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>o r a c L e</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     <!-- Uncomment for local p5.js -->
@@ -390,7 +390,7 @@
             background: rgba(123, 211, 247, 0.6);
             transform: scale(1.2);
         }
-        #waveform-container {
+#waveform-container {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -401,23 +401,25 @@
     overflow: hidden;
     box-shadow: 0 0 20px rgba(123, 211, 247, 0.7);
     z-index: 50;
-    /* Mobile-specific adjustments */
-    max-width: 40vw;
-    max-height: 40vw;
-     opacity: 0.5;
+    opacity: 0.5;
+    /* Remove mobile-specific max-width/height */
 }
+
 
 @media (max-width: 768px) {
     #waveform-container {
         width: 120px !important;
         height: 120px !important;
-        top: 60%; /* Adjust vertical position for mobile */
+        /* Keep the same centering properties */
     }
 }
+
+
         
         #waveform-container:hover {
             opacity: 1;
         }
+
       #waveform-canvas {
   position: absolute; /* ✅ Stay inside parent */
   top: 0;
