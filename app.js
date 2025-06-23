@@ -764,56 +764,34 @@ function normalizeBuffer(buffer) {
 
 function drawWaveformPerFile(buffer, index) {
     const canvas = document.getElementById(`waveform-${index}`);
-    if (!canvas) return;
-    
-    // Mobile-responsive sizing
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    const size = isMobile ? 120 : 150;
-    canvas.width = size;
-    canvas.height = size;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Center calculations
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const maxRadius = (Math.min(canvas.width, canvas.height) / 2) * 0.9;
-    
-    // Create circular clipping path
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
-    ctx.clip();
-    
-    // Draw background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    if (!buffer) return;
-    
-    // Draw waveform
-    const channelData = buffer.getChannelData(0);
-    ctx.strokeStyle = '#7bd3f7';
-    ctx.lineWidth = isMobile ? 1 : 1.5;
-    ctx.beginPath();
-    
-    for (let i = 0; i < 360; i++) {
-        const angle = (i * Math.PI) / 180;
-        const sampleIndex = Math.floor((i / 360) * channelData.length);
-        const sample = channelData[sampleIndex] || 0;
-        const radius = maxRadius * (1 + sample * 0.7);
-        
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-        
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
+    if (!canvas) {
+        console.warn(`app.js: Waveform canvas waveform-${index} not found`);
+        return;
     }
-    
-    ctx.closePath();
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = 'rgba(123, 211, 247, 0.2)';
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = '#f77bd3';
+    ctx.lineWidth = 1;
+    const channelData = buffer.getChannelData(0);
+    const step = Math.ceil(channelData.length / width);
+    ctx.beginPath();
+    for (let i = 0; i < width; i++) {
+        let min = 1;
+        let max = -1;
+        for (let j = 0; j < step; j++) {
+            const sample = channelData[i * step + j] || 0;
+            min = Math.min(min, sample);
+            max = Math.max(max, sample);
+        }
+        const yMin = (1 - min) * height / 2;
+        const yMax = (1 - max) * height / 2;
+        ctx.moveTo(i, yMin);
+        ctx.lineTo(i, yMax);
+    }
     ctx.stroke();
 }
 
