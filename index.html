@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>o r a c L e</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     <!-- Uncomment for local p5.js -->
     <!-- <script src="p5.min.js"></script> -->
-   <style>
+    <style>
         body {
             margin: 0;
             overflow: hidden;
@@ -395,27 +395,27 @@
             top: calc(50% - 1px);
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 250px !important;
-            height: 60px !important;
-            z-index: 50;
+            z-index: 10;
             opacity: 0.8;
             transition: opacity 0.3s;
             background: rgba(0, 0, 0, 0.7) !important;
-            border-radius: 0px;
-            border: 0px solid #7bd3f7;
-            box-shadow: 0 0 20px rgba(123, 211, 247, 0.5);
+               width: 150px !important;  /* Adjust size as needed */
+    height: 150px !important;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(123, 211, 247, 0.7);
             display: none;
         }
         #waveform-container:hover {
             opacity: 1;
         }
-        #waveform-canvas {
-            position: fixed;
-            top: calc(50% - 1px);
-            left: 50%;
-            width: 100%;
-            height: 100%;
-        }
+      #waveform-canvas {
+  position: absolute; /* ✅ Stay inside parent */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
         #logo {
             position: absolute;
             left: 50%;
@@ -1435,41 +1435,41 @@ if (loopDurationInput && loopDurationValue) {
                 let dataArray;
                 let bufferLength;
 
-             p.setup = function() {
-    console.log('Waveform sketch setup started');
-    let canvas = p.createCanvas(150, 150);
-    p.pixelDensity(window.devicePixelRatio); // Match device resolution
-    canvas.id('waveform-canvas');
-    canvas.parent('waveform-container');
-    p.background(0);
-    if (analyser) {
-        bufferLength = analyser.fftSize;
-        dataArray = new Uint8Array(bufferLength);
-    } else {
-        console.error('Analyser not found in waveform setup');
-    }
-    console.log('Waveform sketch setup complete');
-};
+                p.setup = function() {
+                    console.log('Waveform sketch setup started');
+                    let canvas = p.createCanvas(150, 150);
+                    canvas.id('waveform-canvas'); 
+                    canvas.parent('waveform-container');
+                    p.background(0);
+                    if (analyser) {
+                        bufferLength = analyser.fftSize;
+                        dataArray = new Uint8Array(bufferLength);
+                    } else {
+                        console.error('Analyser not found in waveform setup');
+                    }
+                    console.log('Waveform sketch setup complete');
+                };
 
-             p.draw = function() {
-        if (!audio || audio.paused || !analyser) {
-            p.background(0);
-            return;
-        }
-        p.background(0);
-        analyser.getByteTimeDomainData(dataArray);
-        p.stroke(123, 211, 247);
-        p.strokeWeight(1);
-        p.noFill();
-        p.beginShape();
-        for (let i = 0; i < bufferLength; i++) {
-            let x = p.map(i, 0, bufferLength, 0, p.width);
-            let y = p.map(dataArray[i], 0, 255, p.height * 0.25, p.height * 0.75);
-            p.vertex(x, y);
-        }
-        p.endShape();
-    };
-};
+                p.draw = function() {
+                    if (!audio || audio.paused || !analyser) {
+                        p.background(0);
+                        return;
+                    }
+                    console.log('Drawing waveform');
+                    p.push();
+                    let img = p.get(1, 0, p.width - 1, p.height);
+                    p.background(0);
+                    p.image(img, 0, 0);
+                    analyser.getByteTimeDomainData(dataArray);
+                    p.stroke(123, 211, 247);
+                    p.strokeWeight(1);
+                    p.noFill();
+                    let x = p.width - 1;
+                    let y = p.map(dataArray[0], 0, 255, p.height, 0);
+                    p.line(x, p.height / 2, x, y);
+                    p.pop();
+                };
+            };
 
             // Add random glowing effect for parameter nodes when audio plays
             let animationFrameId = null;
