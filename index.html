@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#7bd3f7">
     <title>o r a c L e</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
     <!-- Uncomment for local p5.js -->
@@ -1283,6 +1282,7 @@ if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && wavefor
                     });
                 }
 
+             const loopDurationInput = document.getElementById('loop-duration');
 const loopDurationValue = document.getElementById('loop-duration-value');
 if (loopDurationInput && loopDurationValue) {
     // Set default value to 1.0 (1 minute)
@@ -1535,10 +1535,11 @@ if (loopDurationInput && loopDurationValue) {
             }
         }
     </script>
-     <script>
+      <!-- Service Worker Registration -->
+    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('sw.js')
                     .then(registration => {
                         console.log('Service Worker registered with scope:', registration.scope);
                     })
