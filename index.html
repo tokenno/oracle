@@ -598,6 +598,25 @@
   }
 }
 
+        #overlay-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 100;
+}
+
+#control-panel,
+#waveform-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+}
+
     </style>
 </head>
 <body>
@@ -633,6 +652,7 @@
             <div class="node-connection" id="conn-9"></div>
             <div id="logo">o r a c L e</div>
         </div>
+            <div id="overlay-container">
         <div id="control-panel">
             <h2>Parameter Control</h2>
             <div class="control-group" id="control-track-count" style="display: none;">
@@ -787,6 +807,8 @@
         <canvas id="waveform" style="display: none;"></canvas>
         <div id="loop-status" style="display: none;"></div>
     </div>
+    </div>
+</div>
     <script src="app.js"></script>
     <script>
         const helpContent = document.getElementById('help-content');
