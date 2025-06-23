@@ -7,7 +7,6 @@ const uploadArea = fileInputsContainer?.querySelector('.upload-area');
 const trackCountInput = document.getElementById('track-count');
 const processBtn = document.getElementById('process-btn');
 let trackCount = parseInt(trackCountInput?.value) || 5;
-let isAutoLoading = false;
 
 if (!fileInputsContainer || !uploadArea || !trackCountInput || !processBtn) {
     console.error('Required elements missing:', { fileInputsContainer, uploadArea, trackCountInput, processBtn });
@@ -27,57 +26,13 @@ let projectBPM = 120;
 let processingQueue = [];
 let isProcessing = false;
 const SCALES = {
-    // Traditional scales
     major: [0, 2, 4, 5, 7, 9, 11],
     minor: [0, 2, 3, 5, 7, 8, 10],
     harmonicMinor: [0, 2, 3, 5, 7, 8, 11],
     melodicMinor: [0, 2, 3, 5, 7, 9, 11],
     pentatonic: [0, 2, 4, 7, 9],
     blues: [0, 3, 5, 6, 7, 10],
-    chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-    
-    // Exotic/experimental scales
-    twelveToneRow: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], // Serialism
-    ligeti: [0, 1, 3, 4, 6, 7, 9, 10], // Micropolyphony clusters
-    wholeTone: [0, 2, 4, 6, 8, 10], // Dreamlike quality
-    octatonic: [0, 2, 3, 5, 6, 8, 9, 11], // Diminished scale
-    messiaen3: [0, 2, 3, 6, 7, 8, 10, 11], // Mode of limited transposition
-    pelog: [0, 1, 3, 7, 8], // Balinese gamelan
-    slendro: [0, 3, 5, 7, 10], // Javanese equal temperament
-    partch43: [0, 6, 14, 20, 28, 34, 42], // Microtonal just intonation
-    hexany: [0, 6, 14, 20], // 6-note Partch subset
-    alpha: [0, 15, 30, 45, 60, 75, 90, 105, 120], // Wendy Carlos' 15.4¢ steps
-    
-    // Additional interesting scales
-    hungarianMinor: [0, 2, 3, 6, 7, 8, 11],
-    enigmatic: [0, 1, 4, 6, 8, 10, 11],
-    arabic: [0, 1, 4, 5, 7, 8, 11],
-    hirajoshi: [0, 2, 3, 7, 8],
-    iwato: [0, 1, 5, 6, 10],
-    prometheus: [0, 2, 4, 6, 9, 10],
-    scriabin: [0, 1, 4, 7, 9], // Mystic chord
-    bartok: [0, 2, 4, 6, 7, 9, 10],
-    persian: [0, 1, 4, 5, 6, 8, 11],
-    byzantine: [0, 1, 4, 5, 7, 8, 11],
-    japanese: [0, 1, 5, 7, 8],
-    balinese: [0, 1, 3, 7, 8],
-    egyptian: [0, 2, 5, 7, 10],
-    hawaiian: [0, 2, 3, 5, 7, 9, 10],
-    romanian: [0, 2, 3, 6, 7, 9, 10],
-    spanish8Tone: [0, 1, 3, 4, 5, 6, 8, 10],
-    bebopDominant: [0, 2, 4, 5, 7, 9, 10, 11],
-    bebopMajor: [0, 2, 4, 5, 7, 8, 9, 11],
-    bluesOctave: [0, 3, 5, 6, 7, 10, 12],
-    doubleHarmonic: [0, 1, 4, 5, 7, 8, 11],
-    neapolitanMajor: [0, 1, 3, 5, 7, 9, 11],
-    neapolitanMinor: [0, 1, 3, 5, 7, 8, 11],
-    overtone: [0, 2, 4, 6, 7, 9, 10],
-    altered: [0, 1, 3, 4, 6, 8, 10],
-    locrianMajor: [0, 2, 4, 5, 6, 8, 10],
-    lydianAugmented: [0, 2, 4, 6, 8, 9, 11],
-    lydianDominant: [0, 2, 4, 6, 7, 9, 10],
-    superLocrian: [0, 1, 3, 4, 6, 8, 10],
-    ultralocrian: [0, 1, 3, 4, 6, 7, 9, 10]
+    chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 };
 
 function showStatus(message, type) {
@@ -86,82 +41,51 @@ function showStatus(message, type) {
         statusDisplay.innerHTML = `<div class="status-message ${type}">${message}</div>`;
         statusDisplay.style.display = 'block';
         setTimeout(() => statusDisplay.style.display = 'none', 3000);
+    } else {
+        console.log(`Status: ${message} (${type})`);
     }
-    console.log(`Status: ${message} (${type})`);
 }
 
 async function adjustToScale(files, scaleName, behavior) {
     if (scaleName === 'none' || !SCALES[scaleName]) return files;
-    
     const scale = SCALES[scaleName];
-    const results = [];
-    
-    for (const file of files) {
-        try {
-            if (!file) {
-                results.push(null);
-                continue;
-            }
-
+    if (behavior === 'reorder') {
+        // NEW: Implement reorder behavior by sorting files by their root note
+        const sortedFiles = [...files].map((file, index) => {
             const metadata = fileMetadata.get(file.name);
-            if (!metadata) {
-                results.push(behavior === 'filter' ? null : file);
-                continue;
-            }
-
-            let key = metadata.key;
-            if (!key || key === 'Unknown') key = extractKeyFromFilename(file.name);
-            if (!key || key === 'Unknown') {
-                results.push(behavior === 'filter' ? null : file);
-                continue;
-            }
-
+            let key = metadata?.key || extractKeyFromFilename(file.name);
+            if (!key || key === 'Unknown') key = 'C'; // Default to C if unknown
             const rootNote = noteToMidi(key.split(' ')[0]);
-            if (rootNote === null) {
-                results.push(behavior === 'filter' ? null : file);
-                continue;
-            }
-
-            const fileNote = rootNote % 12;
-            
-            if (behavior === 'filter') {
-                if (scale.includes(fileNote)) results.push(file);
-                else results.push(null);
-            } 
-            else if (behavior === 'transpose') {
-                const nearestNote = findNearestScaleNote(fileNote, scale);
-                const transposeAmount = nearestNote - fileNote;
-                
-                if (transposeAmount !== 0) {
-                    // Get the audio buffer first
-                    let buffer;
-                    if (file instanceof AudioBuffer) {
-                        buffer = file;
-                    } else {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        buffer = await audioCtx.decodeAudioData(arrayBuffer);
-                    }
-                    
-                    const transposedBuffer = await transposeBuffer(buffer, transposeAmount);
-                    transposedBuffer.name = file.name; // Preserve filename
-                    results.push(transposedBuffer);
-                } else {
-                    results.push(file);
-                }
-            }
-            else { // reorder
-                results.push(file);
-            }
-        } catch (error) {
-            console.error(`Error processing file ${file?.name}:`, error);
-            results.push(null);
-        }
+            return { file, rootNote: rootNote !== null ? rootNote % 12 : 0, index };
+        }).sort((a, b) => {
+            // Sort by root note, prioritizing scale notes
+            const aInScale = scale.includes(a.rootNote);
+            const bInScale = scale.includes(b.rootNote);
+            if (aInScale && !bInScale) return -1;
+            if (!aInScale && bInScale) return 1;
+            return a.rootNote - b.rootNote;
+        }).map(item => item.file);
+        return sortedFiles;
     }
-
-    return behavior === 'reorder' ? 
-        reorderFilesByScale(results.filter(Boolean), scale) : 
-        results.filter(file => file !== null);
+    const results = await Promise.all(files.map(async file => {
+        const metadata = fileMetadata.get(file.name);
+        if (!metadata) return behavior === 'filter' ? null : file;
+        let key = metadata.key;
+        if (!key || key === 'Unknown') key = extractKeyFromFilename(file.name);
+        if (!key || key === 'Unknown') return behavior === 'filter' ? null : file;
+        const rootNote = noteToMidi(key.split(' ')[0]);
+        if (rootNote === null) return behavior === 'filter' ? null : file;
+        const fileNote = rootNote % 12;
+        if (behavior === 'filter') return scale.includes(fileNote) ? file : null;
+        if (behavior === 'transpose') {
+            const nearestNote = findNearestScaleNote(fileNote, scale);
+            const transposeAmount = nearestNote - fileNote;
+            if (transposeAmount !== 0) return await transposeBuffer(file, transposeAmount);
+            return file;
+        }
+        return file;
+    }));
+    return results.filter(file => file !== null);
 }
 
 function extractKeyFromFilename(filename) {
@@ -195,30 +119,6 @@ function findNearestScaleNote(note, scale) {
     return nearestNote;
 }
 
-function reorderFilesByScale(files, scale) {
-    return files
-        .map((file, index) => {
-            const metadata = fileMetadata.get(file.name);
-            let key = metadata?.key || extractKeyFromFilename(file.name);
-            if (!key || key === 'Unknown') key = 'C';
-            const rootNote = noteToMidi(key.split(' ')[0]);
-            return {
-                file,
-                rootNote: rootNote !== null ? rootNote % 12 : 0,
-                index
-            };
-        })
-        .sort((a, b) => {
-            const aInScale = scale.includes(a.rootNote);
-            const bInScale = scale.includes(b.rootNote);
-            if (aInScale && !bInScale) return -1;
-            if (!aInScale && bInScale) return 1;
-            return a.rootNote - b.rootNote;
-        })
-        .map(item => item.file);
-}
-
-// Ensure noteToMidi handles edge cases
 function noteToMidi(note) {
     if (!note) return null;
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -231,55 +131,32 @@ function noteToMidi(note) {
     return noteIndex + (octaveNum + 1) * 12;
 }
 
-function validateAudioBuffer(buffer, fileName) {
-    if (!buffer) {
-        console.warn(`Invalid buffer for ${fileName}: null or undefined`);
-        return false;
-    }
-    if (buffer.duration <= 0 || isNaN(buffer.duration)) {
-        console.warn(`Invalid duration for ${fileName}: ${buffer.duration}`);
-        return false;
-    }
-    if (!buffer.sampleRate || buffer.sampleRate <= 0) {
-        console.warn(`Invalid sample rate for ${fileName}: ${buffer.sampleRate}`);
-        return false;
-    }
-    if (!buffer.numberOfChannels) {
-        console.warn(`Invalid channels for ${fileName}: ${buffer.numberOfChannels}`);
-        return false;
-    }
-    console.log(`Buffer validated for ${fileName}: duration=${buffer.duration}s, sampleRate=${buffer.sampleRate}, channels=${buffer.numberOfChannels}`);
-    return true;
-}
-
 function updateProcessButtonState() {
-    const fileInputs = fileInputsContainer.querySelectorAll('input[type="file"]:not(#folder-input)');
+    const processBtn = document.getElementById('process-btn');
+    const fileInputs = fileInputsContainer.querySelectorAll('input[type="file"]');
     let validBuffers = 0;
-    audioBuffers.forEach((buffer, i) => {
-        if (buffer && validateAudioBuffer(buffer, buffer.name)) {
-            validBuffers++;
-            if (fileInputs[i]) {
-                fileInputs[i].classList.remove('invalid');
-                fileInputs[i].classList.add('valid');
+    let totalFiles = 0;
+    fileInputs.forEach((input, i) => {
+        if (input.files.length > 0) {
+            totalFiles++;
+            if (audioBuffers[i] && audioBuffers[i].duration > 0 && audioBuffers[i].sampleRate > 0 && audioBuffers[i].numberOfChannels > 0 && audioBuffers[i].name) {
+                validBuffers++;
+                input.classList.remove('invalid');
+                input.classList.add('valid');
+            } else {
+                input.classList.remove('valid');
+                input.classList.add('invalid');
             }
         } else {
-            if (fileInputs[i]) {
-                fileInputs[i].classList.remove('valid');
-                fileInputs[i].classList.add('invalid');
-            }
+            input.classList.remove('valid', 'invalid');
         }
     });
-    processBtn.disabled = validBuffers === 0;
-    console.log(`app.js: updateProcessButtonState - Valid buffers: ${validBuffers}, Track count: ${trackCount}, Button disabled: ${processBtn.disabled}, audioBuffers:`, audioBuffers.map(b => b ? b.name : null));
+    processBtn.disabled = validBuffers === 0 || validBuffers < totalFiles;
+    console.log(`app.js: Process button state - Valid: ${validBuffers}, Total: ${totalFiles}, Disabled: ${processBtn.disabled}`);
     if (validBuffers === 0) {
-        showStatus('No valid audio files loaded. Check file formats or console for errors.', 'error');
+        showStatus(totalFiles > 0 ? 'No valid audio files loaded. Check file formats.' : 'Please upload audio files to process.', 'error');
     } else {
         showStatus(`${validBuffers} valid audio file(s) loaded.`, 'info');
-        if (isAutoLoading && validBuffers > 0) {
-            console.log('app.js: Auto-triggering processAudioFiles');
-            processAudioFiles();
-            isAutoLoading = false;
-        }
     }
 }
 
@@ -299,9 +176,6 @@ async function processFile(file, index) {
         if (!file.type.startsWith('audio/')) {
             throw new Error('Invalid file type. Please upload audio files (e.g., WAV, OGG, MP3).');
         }
-        if (file.size > 50 * 1024 * 1024) {
-            throw new Error('File too large. Limit is 50MB.');
-        }
         console.log(`Processing file ${file.name} at index ${index}`);
         fileNameSpan.textContent = file.name;
         fileErrorSpan.textContent = 'Processing...';
@@ -313,35 +187,48 @@ async function processFile(file, index) {
         try {
             audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         } catch (decodeError) {
-            console.warn(`Decode error for ${file.name}:`, decodeError);
-            fileErrorSpan.textContent = `Decode error: ${decodeError.message}`;
-            throw new Error(`Failed to decode audio: ${decodeError.message}`);
+            console.warn(`Decode error for ${file.name}, retrying with OfflineAudioContext...`, decodeError);
+            const offlineContext = new OfflineAudioContext(2, Math.min(arrayBuffer.byteLength, 44100 * 60), 44100);
+            audioBuffer = await offlineContext.decodeAudioData(arrayBuffer);
         }
-        if (!validateAudioBuffer(audioBuffer, file.name)) {
-            fileErrorSpan.textContent = 'Invalid audio buffer';
-            throw new Error('Invalid audio buffer: corrupted or empty audio data.');
+        if (!audioBuffer.sampleRate || !audioBuffer.numberOfChannels || audioBuffer.duration <= 0) {
+            throw new Error('Invalid audio buffer: missing sampleRate, channels, or duration');
         }
         audioBuffer.name = file.name;
         audioBuffers[index] = audioBuffer;
 
         let metadata = { bpm: 120, key: 'Unknown', isLoop: loopInput.checked, centerFreq: 0 };
         try {
+            if (typeof musicMetadata !== 'undefined' && file.size < 10 * 1024 * 1024) {
+                const musicMeta = await musicMetadata.parseBlob(file);
+                metadata.bpm = musicMeta.common.bpm || await detectBPM(file, true);
+                metadata.key = musicMeta.common.key || 'Unknown';
+            } else {
+                console.warn(`app.js: Skipping musicMetadata for large file ${file.name}`);
+                metadata.key = extractKeyFromFilename(file.name);
+                metadata.bpm = await detectBPM(file, true);
+            }
+        } catch (metaError) {
+            console.warn(`Metadata error for ${file.name}, using fallbacks:`, metaError);
             metadata.key = extractKeyFromFilename(file.name);
             metadata.bpm = await detectBPM(file, true);
+        }
+        try {
             metadata.centerFreq = await getFFTCenterFrequency(audioBuffer, 30);
-            console.log(`Metadata for ${file.name}: BPM=${metadata.bpm}, Key=${metadata.key}, Freq=${metadata.centerFreq.toFixed(1)}Hz`);
-        } catch (metaError) {
-            console.warn(`Metadata error for ${file.name}:`, metaError);
+            console.log(`Center frequency for ${file.name}: ${metadata.centerFreq.toFixed(1)}Hz`);
+        } catch (freqError) {
+            console.warn(`Couldn't calculate center frequency for ${file.name}:`, freqError);
+            metadata.centerFreq = 0;
         }
         fileMetadata.set(file.name, metadata);
         fileBpmSpan.textContent = `BPM: ${metadata.bpm}, Key: ${metadata.key}, Freq: ${metadata.centerFreq.toFixed(0)}Hz, Type: ${metadata.isLoop ? 'Loop' : 'One-Shot'}`;
         drawWaveformPerFile(audioBuffer, index);
+        updateProcessButtonState();
         console.log(`app.js: Processed ${file.name} in ${(performance.now() - startTime).toFixed(2)}ms`);
     } catch (error) {
         console.error(`Error processing file ${file.name}:`, error);
         fileErrorSpan.textContent = `Error: ${error.message}`;
         audioBuffers[index] = null;
-    } finally {
         updateProcessButtonState();
     }
 }
@@ -351,318 +238,55 @@ async function detectBPM(file, optimize = false) {
         const arrayBuffer = await file.arrayBuffer();
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        
-        // Use first channel only for analysis
-        const channelData = audioBuffer.getChannelData(0); 
+        const channelData = audioBuffer.getChannelData(0);
         const sampleRate = audioBuffer.sampleRate;
-        
-        // Analyze different sections if not optimized
-        const analysisDuration = optimize ? Math.min(30, audioBuffer.duration) : audioBuffer.duration;
-        const maxSamples = Math.min(channelData.length, sampleRate * analysisDuration);
-        
-        // Better downsampling with anti-aliasing
-        const targetSampleRate = 11025; // Good balance for tempo analysis
-        const downsampledData = downsampleBuffer(channelData, sampleRate, targetSampleRate, maxSamples);
-        
-        // Apply multiple detection methods
-        const bpmCandidates = [
-            ...findBPMCandidatesWithAutocorrelation(downsampledData, targetSampleRate),
-            ...findBPMCandidatesWithBeatTracking(downsampledData, targetSampleRate),
-            ...findBPMCandidatesWithOnsetDetection(downsampledData, targetSampleRate)
-        ];
-        
-        // Validate candidates and return best match
-        return selectBestBPM(bpmCandidates);
+        const maxSamples = optimize ? Math.min(channelData.length, sampleRate * 30) : channelData.length;
+        const downsampledRate = 4000;
+        const downsamplingFactor = Math.floor(sampleRate / downsampledRate);
+        const downsampledData = [];
+        for (let i = 0; i < maxSamples; i += downsamplingFactor) {
+            downsampledData.push(channelData[i]);
+        }
+        const filteredData = highPassFilter(downsampledData, downsampledRate, 100);
+        const autocorrelation = calculateAutocorrelation(filteredData);
+        const peaks = findPeaks(autocorrelation);
+        if (peaks.length === 0) return 120;
+        const firstPeak = peaks[0];
+        const beatPeriod = firstPeak / downsampledRate;
+        const bpm = Math.round(60 / beatPeriod);
+        return Math.max(60, Math.min(200, bpm));
     } catch (error) {
         console.error('BPM detection error:', error);
-        return 120; // Fallback BPM
+        return 120;
     }
 }
-
-// Enhanced detection methods
-function findBPMCandidatesWithAutocorrelation(data, sampleRate) {
-    const minBPM = 40;  // Extended range for very slow tempos
-    const maxBPM = 300; // Extended range for very fast tempos
-    const candidates = [];
-    
-    // Apply high-pass filter to remove DC offset
-    const filteredData = highPassFilter(data, sampleRate, 50);
-    
-    // Analyze multiple window sizes with overlap
-    const windowSizes = [3, 6, 12]; // in seconds
-    const hopSize = 0.5; // 50% overlap between windows
-    
-    windowSizes.forEach(windowSize => {
-        const windowSamples = Math.floor(windowSize * sampleRate);
-        const hopSamples = Math.floor(hopSize * sampleRate);
-        const steps = Math.floor((data.length - windowSamples) / hopSamples);
-        
-        for (let step = 0; step < steps; step++) {
-            const start = step * hopSamples;
-            const end = Math.min(start + windowSamples, data.length);
-            const window = filteredData.slice(start, end);
-            
-            const autocorr = calculateWeightedAutocorrelation(window);
-            const peaks = findSignificantPeaks(autocorr, sampleRate, minBPM, maxBPM);
-            
-            peaks.forEach(peak => {
-                const bpm = 60 / (peak.position / sampleRate);
-                if (bpm >= minBPM && bpm <= maxBPM) {
-                    candidates.push({
-                        bpm: Math.round(bpm),
-                        strength: peak.strength * (1 - 0.1 * windowSize), // Smaller windows get slightly more weight
-                        method: 'autocorr',
-                        windowSize
-                    });
-                }
-            });
-        }
-    });
-    
-    return candidates;
-}
-
-function findBPMCandidatesWithBeatTracking(data, sampleRate) {
-    const candidates = [];
-    const minBPM = 100; // Focus on faster tempos
-    const maxBPM = 300;
-    
-    // Calculate spectral flux (good for detecting beats)
-    const frameSize = 1024;
-    const hopSize = frameSize / 4;
-    const frames = Math.floor(data.length / hopSize) - 1;
-    const spectralFlux = new Float32Array(frames);
-    
-    let prevSpectrum = new Float32Array(frameSize / 2);
-    for (let i = 0; i < frames; i++) {
-        const start = i * hopSize;
-        const frame = data.slice(start, start + frameSize);
-        const spectrum = calculateFFT(frame);
-        
-        // Calculate spectral flux
-        let flux = 0;
-        for (let j = 0; j < spectrum.length; j++) {
-            const diff = spectrum[j] - prevSpectrum[j];
-            flux += diff > 0 ? diff : 0;
-        }
-        spectralFlux[i] = flux;
-        prevSpectrum = spectrum;
-    }
-    
-    // Find peaks in spectral flux (potential beats)
-    const peaks = findPeaks(spectralFlux, 0.5);
-    if (peaks.length < 2) return candidates;
-    
-    // Calculate inter-beat intervals
-    const ibis = [];
-    for (let i = 1; i < peaks.length; i++) {
-        ibis.push((peaks[i] - peaks[i-1]) * hopSize / sampleRate);
-    }
-    
-    // Calculate BPM from intervals
-    const bpmValues = ibis.map(ibi => 60 / ibi);
-    const validBpms = bpmValues.filter(bpm => bpm >= minBPM && bpm <= maxBPM);
-    
-    // Group similar BPMs
-    const groups = {};
-    validBpms.forEach(bpm => {
-        const rounded = Math.round(bpm / 5) * 5;
-        groups[rounded] = (groups[rounded] || 0) + 1;
-    });
-    
-    // Add top candidates
-    Object.entries(groups)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .forEach(([bpm, count]) => {
-            candidates.push({
-                bpm: parseInt(bpm),
-                strength: count / peaks.length,
-                method: 'beat'
-            });
-        });
-    
-    return candidates;
-}
-
-function findBPMCandidatesWithOnsetDetection(data, sampleRate) {
-    const candidates = [];
-    const minBPM = 30; // Focus on slower tempos
-    const maxBPM = 100;
-    
-    // Calculate energy envelope
-    const frameSize = 2048;
-    const hopSize = frameSize / 2;
-    const frames = Math.floor(data.length / hopSize);
-    const envelope = new Float32Array(frames);
-    
-    for (let i = 0; i < frames; i++) {
-        const start = i * hopSize;
-        const frame = data.slice(start, start + frameSize);
-        envelope[i] = frame.reduce((sum, x) => sum + x * x, 0) / frame.length;
-    }
-    
-    // Find onsets (sudden increases in energy)
-    const onsets = [];
-    const threshold = 0.1 * Math.max(...envelope); // Dynamic threshold
-    for (let i = 1; i < envelope.length; i++) {
-        if (envelope[i] - envelope[i-1] > threshold) {
-            onsets.push(i);
-        }
-    }
-    
-    if (onsets.length < 2) return candidates;
-    
-    // Calculate inter-onset intervals
-    const iois = [];
-    for (let i = 1; i < onsets.length; i++) {
-        iois.push((onsets[i] - onsets[i-1]) * hopSize / sampleRate);
-    }
-    
-    // Calculate BPM from intervals
-    const bpmValues = iois.map(ioi => 60 / ioi);
-    const validBpms = bpmValues.filter(bpm => bpm >= minBPM && bpm <= maxBPM);
-    
-    // Group similar BPMs
-    const groups = {};
-    validBpms.forEach(bpm => {
-        const rounded = Math.round(bpm / 5) * 5;
-        groups[rounded] = (groups[rounded] || 0) + 1;
-    });
-    
-    // Add top candidates
-    Object.entries(groups)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .forEach(([bpm, count]) => {
-            candidates.push({
-                bpm: parseInt(bpm),
-                strength: count / onsets.length,
-                method: 'onset'
-            });
-        });
-    
-    return candidates;
-}
-
-// Enhanced version of selectBestBPM
-function selectBestBPM(candidates) {
-    if (candidates.length === 0) return 120;
-    
-    // Group similar BPM values (±5 BPM)
-    const groups = {};
-    candidates.forEach(candidate => {
-        const key = Math.round(candidate.bpm / 5) * 5;
-        groups[key] = groups[key] || [];
-        groups[key].push(candidate);
-    });
-    
-    // Find strongest group considering method reliability
-    let bestGroup = null;
-    let maxStrength = 0;
-    Object.entries(groups).forEach(([key, group]) => {
-        // Weight different methods differently
-        const groupStrength = group.reduce((sum, c) => {
-            let weight = 1.0;
-            if (c.method === 'autocorr') weight = 1.2; // Most reliable
-            if (c.method === 'beat') weight = 1.0;
-            if (c.method === 'onset') weight = 0.8; // Least reliable
-            return sum + (c.strength * weight);
-        }, 0);
-        
-        if (groupStrength > maxStrength) {
-            maxStrength = groupStrength;
-            bestGroup = group;
-        }
-    });
-    
-    // Return median of best group
-    const sortedBPMs = bestGroup.map(c => c.bpm).sort((a, b) => a - b);
-    const medianBpm = sortedBPMs[Math.floor(sortedBPMs.length / 2)];
-    
-    // Special handling for very fast/slow tempos
-    if (medianBpm > 200) {
-        // Check if this might be a double-time tempo
-        const halfBpm = medianBpm / 2;
-        const hasHalfBpm = candidates.some(c => Math.abs(c.bpm - halfBpm) < 5);
-        return hasHalfBpm ? halfBpm : medianBpm;
-    } else if (medianBpm < 50) {
-        // Check if this might be a half-time tempo
-        const doubleBpm = medianBpm * 2;
-        const hasDoubleBpm = candidates.some(c => Math.abs(c.bpm - doubleBpm) < 5);
-        return hasDoubleBpm ? doubleBpm : medianBpm;
-    }
-    
-    return medianBpm;
-}
-
-
 
 async function getFFTCenterFrequency(buffer, maxSeconds = Infinity) {
     if (!buffer || buffer.numberOfChannels === 0) return 0;
-    
-    const fftSize = 2048; // Keep consistent with your original size
     const maxSamples = Math.min(buffer.length, buffer.sampleRate * maxSeconds);
     const offlineCtx = new OfflineAudioContext(1, maxSamples, buffer.sampleRate);
-    
-    // Create analyzer with larger FFT for better frequency resolution
-    const analyser = offlineCtx.createAnalyser();
-    analyser.fftSize = fftSize;
-    const binCount = analyser.frequencyBinCount;
-    const binWidth = offlineCtx.sampleRate / fftSize;
-
-    // Prepare audio buffer
     const source = offlineCtx.createBufferSource();
     const tempBuffer = offlineCtx.createBuffer(buffer.numberOfChannels, maxSamples, buffer.sampleRate);
     for (let c = 0; c < buffer.numberOfChannels; c++) {
         tempBuffer.copyToChannel(buffer.getChannelData(c).slice(0, maxSamples), c);
     }
     source.buffer = tempBuffer;
+    const analyser = offlineCtx.createAnalyser();
+    analyser.fftSize = 2048;
     source.connect(analyser);
-    analyser.connect(offlineCtx.destination);
     source.start(0);
-
-    // Process audio
     await offlineCtx.startRendering();
-    
-    // Get frequency data
-    const dataArray = new Float32Array(binCount);
+    const dataArray = new Float32Array(analyser.frequencyBinCount);
     analyser.getFloatFrequencyData(dataArray);
-
-    // Calculate weighted spectral centroid with A-weighting approximation
     let totalMagnitude = 0;
     let weightedSum = 0;
-    
-    for (let i = 0; i < binCount; i++) {
-        const freq = i * binWidth;
-        const magnitude = Math.pow(10, dataArray[i] / 20); // Convert dB to linear
-        
-        // Apply simple A-weighting approximation (emphasizes mid frequencies)
-        const aWeighting = freq < 1000 ? 
-            Math.min(1, freq / 1000) : // Roll off lows
-            Math.min(1, 4000 / freq);  // Roll off highs
-        
-        const weightedMagnitude = magnitude * aWeighting;
-        
-        totalMagnitude += weightedMagnitude;
-        weightedSum += freq * weightedMagnitude;
-    }
-
-    // Also find peak frequency (useful for musical analysis)
-    let peakMag = 0;
-    let peakFreq = 0;
-    for (let i = 0; i < binCount; i++) {
-        const freq = i * binWidth;
+    for (let i = 0; i < dataArray.length; i++) {
         const magnitude = Math.pow(10, dataArray[i] / 20);
-        if (magnitude > peakMag) {
-            peakMag = magnitude;
-            peakFreq = freq;
-        }
+        const freq = i * offlineCtx.sampleRate / analyser.fftSize;
+        totalMagnitude += magnitude;
+        weightedSum += freq * magnitude;
     }
-
-    // Return weighted average, but bias slightly toward peak frequency
-    const centroid = totalMagnitude > 0 ? weightedSum / totalMagnitude : 0;
-    return (centroid * 0.7 + peakFreq * 0.3); // Blend of centroid and peak
+    return totalMagnitude > 0 ? weightedSum / totalMagnitude : 0;
 }
 
 function highPassFilter(data, sampleRate, cutoff) {
@@ -692,38 +316,28 @@ function calculateAutocorrelation(data) {
 function findPeaks(data) {
     const peaks = [];
     for (let i = 1; i < data.length - 1; i++) {
-        if (data[i] > data[i - 1] && data[i] > data[i + 1]) {
+        if (isPeak(data, i)) {
             peaks.push(i);
         }
     }
     return peaks.sort((a, b) => data[b] - data[a]);
 }
 
-async function transposeBuffer(fileOrBuffer, semitones) {
-    try {
-        // Handle both File objects and AudioBuffer objects
-        let arrayBuffer;
-        if (fileOrBuffer instanceof File || fileOrBuffer instanceof Blob) {
-            arrayBuffer = await fileOrBuffer.arrayBuffer();
-        } else if (fileOrBuffer instanceof ArrayBuffer) {
-            arrayBuffer = fileOrBuffer;
-        } else {
-            throw new Error('Invalid input type for transposition');
-        }
+function isPeak(data, index) {
+    return data[index] > data[index - 1] && data[index] > data[index + 1];
+}
 
-        const offlineCtx = new OfflineAudioContext(2, arrayBuffer.byteLength, 44100);
-        const buffer = await offlineCtx.decodeAudioData(arrayBuffer);
-        const source = offlineCtx.createBufferSource();
-        source.buffer = buffer;
-        source.playbackRate.value = Math.pow(2, semitones / 12);
-        source.connect(offlineCtx.destination);
-        source.start(0);
-        const renderedBuffer = await offlineCtx.startRendering();
-        return renderedBuffer;
-    } catch (error) {
-        console.error('Error in transposeBuffer:', error);
-        throw error;
-    }
+async function transposeBuffer(file, semitones) {
+    const arrayBuffer = await file.arrayBuffer();
+    const offlineCtx = new OfflineAudioContext(2, arrayBuffer.byteLength, 44100);
+    const buffer = await offlineCtx.decodeAudioData(arrayBuffer);
+    const source = offlineCtx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = Math.pow(2, semitones / 12);
+    source.connect(offlineCtx.destination);
+    source.start(0);
+    const renderedBuffer = await offlineCtx.startRendering();
+    return renderedBuffer;
 }
 
 async function timestretchBuffer(buffer, factor) {
@@ -860,12 +474,13 @@ function getAlgorithmicOrder(files, algorithm, length) {
             order.push(files.length - 1 - (i % files.length));
         }
     } else if (algorithm === 'scale-ascending') {
-        const scaleName = document.getElementById('musical-scale')?.value || 'none';
-        const scale = SCALES[scaleName] || SCALES.chromatic;
+        // NEW: Implement Scale Ascending by sorting files by root note
+        const scaleName = document.getElementById('scale-select')?.value || 'none';
+        const scale = SCALES[scaleName] || SCALES.chromatic; // Fallback to chromatic if none
         const sortedIndices = files.map((file, index) => {
             const metadata = fileMetadata.get(file.name);
             let key = metadata?.key || extractKeyFromFilename(file.name);
-            if (!key || key === 'Unknown') key = 'C';
+            if (!key || key === 'Unknown') key = 'C'; // Default to C
             const rootNote = noteToMidi(key.split(' ')[0]);
             return { index, rootNote: rootNote !== null ? rootNote % 12 : 0 };
         }).sort((a, b) => {
@@ -875,22 +490,6 @@ function getAlgorithmicOrder(files, algorithm, length) {
             if (!aInScale && bInScale) return 1;
             return a.rootNote - b.rootNote;
         }).map(item => item.index);
-        for (let i = 0; i < length; i++) {
-            order.push(sortedIndices[i % sortedIndices.length]);
-        }
-    } else if (algorithm === 'freq-asc') {
-        const sortedIndices = files.map((file, index) => {
-            const metadata = fileMetadata.get(file.name);
-            return { index, centerFreq: metadata?.centerFreq || 0 };
-        }).sort((a, b) => a.centerFreq - b.centerFreq).map(item => item.index);
-        for (let i = 0; i < length; i++) {
-            order.push(sortedIndices[i % sortedIndices.length]);
-        }
-    } else if (algorithm === 'freq-desc') {
-        const sortedIndices = files.map((file, index) => {
-            const metadata = fileMetadata.get(file.name);
-            return { index, centerFreq: metadata?.centerFreq || 0 };
-        }).sort((a, b) => b.centerFreq - a.centerFreq).map(item => item.index);
         for (let i = 0; i < length; i++) {
             order.push(sortedIndices[i % sortedIndices.length]);
         }
@@ -908,8 +507,9 @@ async function createLoopingMix(processedFiles, wetDryMix, algorithm, loopDurati
         return null;
     }
     const sampleRate = audioContext.sampleRate;
+    // NEW: Calculate max loops based on loopDurationMinutes
     const loopDurationSeconds = loopDurationMinutes * 60;
-    const beatDuration = (60 / projectBPM) * 4;
+    const beatDuration = (60 / projectBPM) * 4; // Duration of one loop segment (4 beats)
     const maxLoops = Math.min(MAX_LOOPS, Math.ceil(loopDurationSeconds / beatDuration));
     const maxDuration = Math.max(...processedFiles.map(f => f ? f.duration : 0)) * maxLoops;
     const offlineCtx = new OfflineAudioContext(2, maxDuration * sampleRate, sampleRate);
@@ -1027,6 +627,8 @@ function startRealTimeLoop(buffer) {
 function stopPlayback() {
     console.log('app.js: Stopping playback');
     isPlaying = false;
+    
+    // Stop all active sources
     activeSources.forEach(({ source }) => {
         try {
             source.stop();
@@ -1036,43 +638,40 @@ function stopPlayback() {
         }
     });
     activeSources = [];
+    
+    // Clear the scheduler
     if (loopScheduler) {
         clearInterval(loopScheduler);
         loopScheduler = null;
     }
+    
+    // Don't close the audio context here - just suspend it
     if (audioContext) {
         audioContext.suspend().catch(e => console.warn('app.js: Error suspending audioContext:', e));
     }
- // Also stop the blinking when audio stops
-    stopNodeBlinking();
 }
 
 function restartAudioContext() {
     if (audioContext) {
+        // If context exists but is closed, create a new one
         if (audioContext.state === 'closed') {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } else if (audioContext.state === 'suspended') {
+        } 
+        // If suspended, resume it
+        else if (audioContext.state === 'suspended') {
             audioContext.resume().catch(e => console.warn('app.js: Error resuming audioContext:', e));
         }
     } else {
+        // Create new context if none exists
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 }
 
-// In your processAudioFiles function, modify it like this:
-
 async function processAudioFiles() {
     console.log('app.js: Processing audio files');
-    const statusDisplay = document.getElementById('status-display');
-    const downloadBtn = document.getElementById('download-btn');
-    
+    showStatus('Processing audio...', 'info');
     try {
-        statusDisplay.innerHTML = '<div class="status-message info">Processing audio... Please wait</div>';
-        statusDisplay.style.display = 'block';
-        statusDisplay.style.opacity = '1';
-        if (downloadBtn) downloadBtn.disabled = true;
-
-        restartAudioContext();
+          restartAudioContext();
         const maxBlend = parseFloat(document.getElementById('max-blend')?.value || 0.5);
         const playbackRate = parseFloat(document.getElementById('playback-rate')?.value || 1.0);
         const preservePitch = document.getElementById('preserve-pitch')?.checked || false;
@@ -1080,19 +679,23 @@ async function processAudioFiles() {
         const wetDryMix = parseFloat(document.getElementById('wet-dry')?.value || 0.5);
         const algorithm = document.getElementById('algorithm-select')?.value || 'sequential';
         const silencePercentage = parseFloat(document.getElementById('silence-percentage')?.value || 0);
-        const scaleSelect = document.getElementById('musical-scale')?.value || 'none';
+        const scaleSelect = document.getElementById('scale-select')?.value || 'none';
         const scaleBehavior = document.getElementById('scale-behavior')?.value || 'filter';
+        // NEW: Read loop-duration input
         const loopDurationMinutes = Math.max(0.1, Math.min(10, parseFloat(document.getElementById('loop-duration')?.value || 5)));
 
-        let processedFiles = audioBuffers.filter(b => b && validateAudioBuffer(b, b.name));
-        if (processedFiles.length === 0) {
-            showStatus('No valid audio files to process.', 'error');
-            if (downloadBtn) downloadBtn.disabled = true;
-            return;
-        }
+        console.log('app.js: Processing with settings:', {
+            maxBlend, playbackRate, preservePitch, reverbTime, wetDryMix, algorithm, silencePercentage, scaleSelect, scaleBehavior, loopDurationMinutes
+        });
 
+        let processedFiles = audioBuffers.filter(b => b);
         if (scaleSelect !== 'none') {
             processedFiles = await adjustToScale(processedFiles, scaleSelect, scaleBehavior);
+        }
+
+        if (processedFiles.length === 0) {
+            showStatus('No valid audio files to process.', 'error');
+            return;
         }
 
         if (!preservePitch && playbackRate !== 1.0) {
@@ -1103,86 +706,32 @@ async function processAudioFiles() {
         if (algorithm === 'one-shot') {
             mixedBuffer = await createOneShotMix(processedFiles, wetDryMix);
         } else {
+            // NEW: Pass loopDurationMinutes to createLoopingMix
             mixedBuffer = await createLoopingMix(processedFiles, wetDryMix, algorithm, loopDurationMinutes);
         }
 
-        if (!mixedBuffer || !validateAudioBuffer(mixedBuffer, 'mixed-audio')) {
-            showStatus('Failed to mix audio: invalid output buffer.', 'error');
-            if (downloadBtn) downloadBtn.disabled = true;
+        if (!mixedBuffer) {
+            showStatus('Failed to mix audio.', 'error');
             return;
         }
 
         const mixedAudio = document.getElementById('mixed-audio');
         if (mixedAudio) {
             const wavData = encodeWAV(mixedBuffer);
-            const audioBlob = new Blob([wavData], { type: 'audio/wav' });
-            mixedAudio.src = URL.createObjectURL(audioBlob);
+            mixedAudio.src = URL.createObjectURL(new Blob([wavData], { type: 'audio/wav' }));
             mixedAudio.playbackRate = preservePitch ? playbackRate : 1.0;
-            
-            if (downloadBtn) {
-                downloadBtn.disabled = false;
-                console.log('Download button enabled');
-            }
-
-            if (mixedAudio._previousBlobUrl) {
-                URL.revokeObjectURL(mixedAudio._previousBlobUrl);
-            }
-            mixedAudio._previousBlobUrl = mixedAudio.src;
-
-  mixedAudio.onplay = () => {
-    statusDisplay.style.opacity = '0';
-    setTimeout(() => {
-        statusDisplay.style.display = 'none';
-        startTempoSyncedBlinking(); // Use the new function
-    }, 500);
-};
-            mixedAudio.play().catch(e => {
-                console.warn('app.js: Error playing mixed audio:', e);
-                showStatus('Error playing audio. Click play manually.', 'error');
-            });
+            mixedAudio.play().catch(e => console.warn('app.js: Error playing mixed audio:', e));
         }
 
         startRealTimeLoop(mixedBuffer);
+        showStatus('Audio processing complete', 'success');
+        console.log('app.js: Audio processing complete');
     } catch (error) {
         console.error('app.js: Error processing audio files:', error);
-        let errorMessage = error.message;
-        if (error.message.includes('non-finite') || error.message.includes('timing')) {
-            errorMessage = 'Invalid timing parameters. Please check: \n' +
-                          '- BPM should be between 40-240 \n' +
-                          '- Loop duration should be 0.1-10 minutes \n' +
-                          '- Playback rate should be between 0.1-4.0';
-        }
-        
-        showStatus(`Error: ${errorMessage}`, 'error');
-        if (downloadBtn) downloadBtn.disabled = true;
-        
-        const mixedAudio = document.getElementById('mixed-audio');
-        if (mixedAudio && mixedAudio.src) {
-            URL.revokeObjectURL(mixedAudio.src);
-            mixedAudio.removeAttribute('src');
-        }
+        showStatus(`Error processing audio: ${error.message}`, 'error');
     }
 }
 
-// Modify your showStatus function to not auto-hide for processing messages:
-function showStatus(message, type) {
-    const statusDisplay = document.getElementById('status-display');
-    if (statusDisplay) {
-        statusDisplay.innerHTML = `<div class="status-message ${type}">${message}</div>`;
-        statusDisplay.style.display = 'block';
-        statusDisplay.style.opacity = '1';
-        
-        // Only auto-hide if it's not a processing message
-        if (!message.includes('Processing') && !message.includes('Please wait')) {
-            setTimeout(() => {
-                statusDisplay.style.opacity = '0';
-                setTimeout(() => {
-                    statusDisplay.style.display = 'none';
-                }, 500); // Match the CSS transition duration
-            }, 3000);
-        }
-    }
-}
 function encodeWAV(buffer) {
     const numChannels = buffer.numberOfChannels;
     const sampleRate = buffer.sampleRate;
@@ -1254,47 +803,21 @@ function downloadMixedAudio() {
     a.click();
 }
 
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
 function createFileInputs(count = trackCount) {
     console.log(`Creating ${count} file inputs`);
     const oldInputs = fileInputsContainer.querySelectorAll('.file-upload-input');
-    oldInputs.forEach(el => el.remove());
-    audioBuffers = new Array(count).fill(null);
+    oldInputs.forEach(el => {
+        const input = el.querySelector('input[type="file"]');
+        if (input) {
+            const newInput = input.cloneNode(true);
+            input.replaceWith(newInput);
+        }
+        el.remove();
+    });
+    audioBuffers = [];
     fileMetadata.clear();
     processingQueue = [];
     isProcessing = false;
-
-    const folderInputDiv = document.createElement('div');
-    folderInputDiv.className = 'file-upload-input';
-    folderInputDiv.style.display = 'none';
-    const folderInput = document.createElement('input');
-    folderInput.type = 'file';
-    folderInput.id = 'folder-input';
-    folderInput.setAttribute('webkitdirectory', '');
-    folderInput.setAttribute('directory', '');
-    folderInput.accept = 'audio/*';
-    folderInput.addEventListener('change', () => {
-        console.log(`Folder input changed, files: ${folderInput.files.length}`);
-        if (folderInput.files.length > 0) {
-            console.log(`app.js: Folder selected with ${folderInput.files.length} files`);
-            showStatus(`Selected folder with ${folderInput.files.length} audio files`, 'info');
-            isAutoLoading = true;
-            distributeFiles(Array.from(folderInput.files));
-        } else {
-            showStatus('No files selected from folder.', 'info');
-            isAutoLoading = false;
-        }
-    });
-    folderInputDiv.appendChild(folderInput);
-    fileInputsContainer.appendChild(folderInputDiv);
-
     for (let i = 0; i < count; i++) {
         const div = document.createElement('div');
         div.className = 'file-upload-input';
@@ -1324,9 +847,7 @@ function createFileInputs(count = trackCount) {
         loopInput.type = 'checkbox';
         loopInput.id = `loop-input-${i}`;
         loopInput.className = 'loop-checkbox';
-        
         loopInput.addEventListener('change', () => {
-            console.log(`Loop checkbox changed for input ${i}`);
             const file = audioBuffers[i]?.name;
             if (file && fileMetadata.has(file)) {
                 const metadata = fileMetadata.get(file);
@@ -1336,18 +857,13 @@ function createFileInputs(count = trackCount) {
                 console.log(`app.js: Loop set to ${metadata.isLoop} for ${file}`);
             }
         });
-
         input.addEventListener('change', () => {
-            console.log(`File input ${input.id} changed`);
             if (input.files.length > 0) {
                 console.log(`app.js: File selected for input ${input.id}: ${input.files[0].name}`);
-                showStatus(`Selected file: ${input.files[0].name}`, 'info');
                 fileName.textContent = input.files[0].name;
                 processingQueue.push({ file: input.files[0], index: i });
-                isAutoLoading = false;
                 processQueue();
             } else {
-                showStatus('No file selected.', 'info');
                 fileName.textContent = '';
                 fileError.textContent = '';
                 fileBpm.textContent = '';
@@ -1355,7 +871,6 @@ function createFileInputs(count = trackCount) {
                 updateProcessButtonState();
             }
         });
-
         div.appendChild(label);
         div.appendChild(input);
         div.appendChild(fileName);
@@ -1366,117 +881,51 @@ function createFileInputs(count = trackCount) {
         div.appendChild(loopInput);
         fileInputsContainer.appendChild(div);
     }
-    console.log(`app.js: Created ${count} file inputs`);
 }
 
 async function processQueue() {
     if (isProcessing || processingQueue.length === 0) return;
     isProcessing = true;
     showStatus('Processing files...', 'info');
-    try {
-        console.log(`app.js: Processing ${processingQueue.length} files in queue`);
-        let processedCount = 0;
-        while (processingQueue.length > 0) {
-            const { file, index } = processingQueue.shift();
-            console.log(`Processing queue item: ${file.name} at index ${index}`);
-            await processFile(file, index);
-            processedCount++;
-            console.log(`app.js: Processed ${processedCount}/${processedCount + processingQueue.length} files`);
-            await new Promise(resolve => setTimeout(resolve, 0));
-        }
-        console.log(`app.js: Completed processing ${processedCount} files`);
-        showStatus('File processing complete', 'success');
-    } catch (error) {
-        console.error('app.js: Error processing queue:', error);
-        showStatus(`Error processing files: ${error.message}`, 'error');
-    } finally {
-        isProcessing = false;
-        updateProcessButtonState();
-        console.log('app.js: Processing queue complete');
+    while (processingQueue.length > 0) {
+        const { file, index } = processingQueue.shift();
+        await processFile(file, index);
+        await new Promise(resolve => setTimeout(resolve, 0));
     }
+    isProcessing = false;
+    showStatus('File processing complete', 'success');
 }
 
 async function distributeFiles(files) {
     try {
         console.log(`app.js: Distributing ${files.length} files`, files.map(f => f.name));
         if (!files || files.length === 0) {
-            console.error('app.js: No files provided');
-            showStatus('No files provided.', 'error');
-            isAutoLoading = false;
+            showStatus('No files provided. Please drag and drop audio files.', 'error');
             return;
         }
-        const fileInputs = fileInputsContainer.querySelectorAll('input[type="file"]:not(#folder-input)');
+        const fileInputs = fileInputsContainer.querySelectorAll('input[type="file"]');
         if (!fileInputs.length) {
-            console.error('app.js: No file input elements found');
-            showStatus('No file inputs available.', 'error');
-            isAutoLoading = false;
+            console.error('app.js: No file input elements found in #file-inputs');
+            showStatus('No file inputs available. Check UI setup.', 'error');
             return;
         }
         const validFiles = files.filter(file => file.type.startsWith('audio/'));
         if (!validFiles.length) {
-            console.error('app.js: No valid audio files detected');
-            showStatus('No valid audio files. Use WAV, MP3, or OGG.', 'error');
-            isAutoLoading = false;
+            console.error('app.js: No valid audio files in dropped files');
+            showStatus(' PaxNo valid audio files detected. Use WAV, MP3, or OGG.', 'error');
             return;
         }
-
-        audioBuffers = new Array(trackCount).fill(null);
-        fileMetadata.clear();
-        fileInputs.forEach((input, i) => {
-            const fileName = input.parentElement.querySelector('.file-name');
-            const fileError = input.parentElement.querySelector('.file-error');
-            const fileBpm = input.parentElement.querySelector('.file-bpm');
-            if (fileName) fileName.textContent = '';
-            if (fileError) fileError.textContent = '';
-            if (fileBpm) fileBpm.textContent = '';
-            input.value = '';
+        validFiles.slice(0, fileInputs.length).forEach((file, i) => {
+            console.log(`app.js: Queuing ${file.name} for track ${i}`);
+            processingQueue.push({ file, index: i });
         });
-
-        const selectedFiles = validFiles.slice(0, trackCount);
-        console.log(`app.js: Selected ${selectedFiles.length} files:`, selectedFiles.map(f => f.name));
-
-        selectedFiles.forEach((file, i) => {
-            if (i < fileInputs.length) {
-                console.log(`app.js: Queuing ${file.name} for track ${i}`);
-                const fileName = fileInputs[i].parentElement.querySelector('.file-name');
-                if (fileName) fileName.textContent = file.name;
-                processingQueue.push({ file, index: i });
-            }
-        });
-        console.log(`app.js: Queued ${processingQueue.length} files for processing`);
-        await processQueue();
-        showStatus(`${selectedFiles.length} file(s) queued for processing`, 'info');
+        processQueue();
+        console.log('app.js: File distribution queued');
     } catch (error) {
         console.error('app.js: Error distributing files:', error);
         showStatus(`Error loading files: ${error.message}`, 'error');
-        isAutoLoading = false;
-        updateProcessButtonState();
     }
 }
-
-function setupBlinkRateControls() {
-    const bpmInput = document.getElementById('project-bpm-slider');
-    const playbackRateInput = document.getElementById('playback-rate');
-    
-    if (bpmInput) {
-        bpmInput.addEventListener('input', () => {
-            if (isBlinkingActive) {
-                stopNodeBlinking();
-                startTempoSyncedBlinking();
-            }
-        });
-    }
-    
-    if (playbackRateInput) {
-        playbackRateInput.addEventListener('input', () => {
-            if (isBlinkingActive) {
-                stopNodeBlinking();
-                startTempoSyncedBlinking();
-            }
-        });
-    }
-}
-
 
 function setupEventListeners() {
     console.log('app.js: Setting up event listeners');
@@ -1505,7 +954,6 @@ function setupEventListeners() {
                 trackCount = count;
                 console.log(`app.js: Track count changed to ${count}`);
                 createFileInputs(count);
-                updateProcessButtonState();
             });
         }
         if (maxBlendInput && blendValueSpan) {
@@ -1519,7 +967,7 @@ function setupEventListeners() {
                 playbackRateValue.textContent = `${rate.toFixed(2)}x`;
                 const mixedAudio = document.getElementById('mixed-audio');
                 if (mixedAudio && mixedAudio.src) {
-                    mixedAudio.playbackRate = preservePitchInput.checked ? rate : 1.0;
+                    mixedAudio.playbackRate = preservePitchInput.checked ? 1 : rate;
                 }
             });
         }
@@ -1557,46 +1005,37 @@ function setupEventListeners() {
         if (stopBtn) stopBtn.addEventListener('click', stopPlayback);
 
         if (!uploadArea) {
-            console.error('app.js: .upload-area not found');
-            showStatus('Upload area not found.', 'error');
+            console.error('app.js: .upload-area not found inside #file-inputs');
+            showStatus('Upload area not found. Check UI setup.', 'error');
             return;
         }
         console.log('app.js: Binding drag-and-drop to', uploadArea);
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('app.js: Dragover event');
-            uploadArea.style.background = 'rgba(123, 211, 247, 0.3)';
-            showStatus('Drag files here...', 'info');
-        });
+            console.log('app.js: Dragover event fired');
+            uploadArea.style.background = 'rgba(123, 211, 247, 0.2)';
+        }, false);
         uploadArea.addEventListener('dragleave', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('app.js: Dragleave event');
+            console.log('app.js: Dragleave event fired');
             uploadArea.style.background = '';
-        });
+        }, false);
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('app.js: Drop event', e.dataTransfer.files);
+            console.log('app.js: Drop event fired', e.dataTransfer.files);
             uploadArea.style.background = '';
             const files = Array.from(e.dataTransfer.files || []);
             if (!files.length) {
-                showStatus('No files dropped.', 'error');
+                console.error('app.js: No files in drop event');
+                showStatus('No files detected in drop. Try again.', 'error');
                 return;
             }
-            showStatus(`Dropped ${files.length} file(s)`, 'info');
-            isAutoLoading = false;
+            console.log(`app.js: Dropped ${files.length} files:`, files.map(f => f.name));
             distributeFiles(files);
-        });
-        uploadArea.addEventListener('click', () => {
-            const input = fileInputsContainer.querySelector('input[type="file"]:not(#folder-input)');
-            if (input) {
-                console.log('app.js: Upload area clicked, triggering file input');
-                input.click();
-            }
-        });
-setupBlinkRateControls();
+        }, false);
     } catch (error) {
         console.error('app.js: Error in setupEventListeners:', error);
         showStatus(`Error setting up event listeners: ${error.message}`, 'error');
@@ -1604,7 +1043,6 @@ setupBlinkRateControls();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('app.js: DOMContentLoaded');
     createFileInputs();
     setupEventListeners();
 });
