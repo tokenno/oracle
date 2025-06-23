@@ -1,6 +1,6 @@
   "name": "Oracle Audio Processor",
   "short_name": "Oracle",
-  "description": "A web-based audio processing app for mixing, looping, and applying effects to audio tracks.",
+  "description": "In search for future Soundscapes... Ask the Oracle.",
   "start_url": "/oracle",
   "display": "standalone",
   "background_color": "#ffffff",
