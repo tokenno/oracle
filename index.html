@@ -1265,6 +1265,11 @@ if (nodes && controlPanel && fileInputs && audioPlayer && closePlayer && wavefor
             if (window.p5) time += p5.prototype.random(1, 3);
         });
     });
+ // CLOSE FILES
+    document.getElementById('close-files-btn')?.addEventListener('click', function() {
+    document.getElementById('file-inputs').style.display = 'none';
+    document.getElementById('node-file-inputs')?.classList.remove('active');
+});
 
     // Reset active node when clicking outside
     document.addEventListener('click', (e) => {
