@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="/manifest.json" />
     <title>o r a c L e</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
@@ -33,6 +31,66 @@
   color: green;
   background-color: transparent;
   text-decoration: none;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Ensure full height layout */
+html, body {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  overflow: hidden;
+}
+
+/* Touch action improvements */
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile-specific adjustments */
+@media screen and (max-width: 768px) {
+  #audio-mandala {
+    transform: scale(0.9);
+  }
+  
+  .parameter-node {
+    width: 35px !important;
+    height: 35px !important;
+  }
+  
+  .node-process {
+    width: 55px !important;
+    height: 55px !important;
+  }
+  
+  .node-file-inputs {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  #control-panel {
+    max-width: 95vw;
+    padding: 10px;
+  }
+  
+  #file-inputs {
+    width: 95vw;
+    padding: 15px;
+  }
+}
+
+/* Prevent zoom on input focus */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  select:focus,
+  textarea:focus,
+  input:focus {
+    font-size: 16px;
+  }
 }
         
         #fractal-canvas {
