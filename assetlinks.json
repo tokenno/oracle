@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.tokenno.oracle",
+    "sha256_cert_fingerprints": [
+      "C9:9B:17:61:59:3F:12:EE:22:AB:18:DD:24:8F:27:7C:CC:19:36:40:0E:2E:DA:28:2A:EF:20:19:37:3D:A2:BD"
+    ]
+  }
+}]
