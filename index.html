@@ -297,6 +297,29 @@
             cursor: not-allowed;
                 align-items: center;
         }
+
+        .close-btn {
+    position: absolute;
+ 
+    background: #b9dc09;
+    color: rgb(18, 17, 17);
+
+    font-size: 10px;
+   
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+
+    align-items: center;
+
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #ff1a1a;
+    transform: scale(1.1);
+}
+        
         
 .button-group button:hover:not(:disabled) {
     background: rgba(123, 211, 247, 0.6);
@@ -638,7 +661,6 @@
                     <option value="slendro">Slendro</option>
                     <option value="partch43">Harry Partch</option>
                     <option value="hexany">Hexany</option>
-                    <option value="slendro">Slendro</option>
                     <option value="alpha">Alpha</option>
                        <option value="enigmatic">Enigmatic</option>
                     <option value="prometheus">Prometheus</option>
@@ -684,9 +706,10 @@
         </div>
         <div id="file-inputs">
             <div class="upload-area">Drag and drop audio files or click to select</div>
+               <button id="close-files-btn" class="close-btn">close</button>
        <div style="margin: 10px 0; text-align: center;">
+         <label for="loop-all-checkbox" style="color: #7bd3f7; font-size: 12px;">Loop All Files</label>
         <input type="checkbox" id="loop-all-checkbox" style="margin-right: 5px;">
-        <label for="loop-all-checkbox" style="color: #7bd3f7; font-size: 12px;">Loop All Files</label>
     </div>
         </div>
         <div id="status-display"></div>
