@@ -14,6 +14,11 @@ if (!fileInputsContainer || !uploadArea || !trackCountInput || !processBtn) {
     window.showStatus('UI elements not found. Check console.', 'error');
     throw new Error('Initialization failed');
 }
+
+// Add recording-related variables
+let mediaRecorders = new Array(trackCount).fill(null);
+let recordedChunks = new Array(trackCount).fill().map(() => []);
+let audioStreams = new Array(trackCount).fill(null);
 let loopDurationMinutes = 1.0;
 let loopAllCheckbox = document.getElementById('loop-all-checkbox');
 let audioBuffers = [];
@@ -253,8 +258,103 @@ function validateAudioBuffer(buffer, fileName) {
     return true;
 }
 
+async function startRecording(index) {
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioStreams[index]) {
+            console.warn(`app.js: Recording already in progress for track ${index}`);
+            showStatus('Recording already in progress.', 'error');
+            return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioStreams[index] = stream;
+        mediaRecorders[index] = new MediaRecorder(stream);
+        recordedChunks[index] = [];
+
+        mediaRecorders[index].ondataavailable = (e) => {
+            if (e.data.size > 0) {
+                recordedChunks[index].push(e.data);
+            }
+        };
+
+        mediaRecorders[index].onstop = async () => {
+            const blob = new Blob(recordedChunks[index], { type: 'audio/webm' });
+            const arrayBuffer = await blob.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            audioBuffer.name = `recording_track_${index + 1}.webm`;
+            audioBuffers[index] = audioBuffer;
+
+            const fileInputDiv = fileInputsContainer.querySelector(`#file-input-${index}`)?.parentElement;
+            const fileNameSpan = fileInputDiv?.querySelector('.file-name');
+            const fileErrorSpan = fileInputDiv?.querySelector('.file-error');
+            const fileBpmSpan = fileInputDiv?.querySelector('.file-bpm');
+            const loopInput = fileInputDiv?.querySelector(`#loop-input-${index}`);
+
+            if (fileNameSpan && fileErrorSpan && fileBpmSpan && loopInput) {
+                fileNameSpan.textContent = audioBuffer.name;
+                fileErrorSpan.textContent = '';
+                let metadata = { bpm: 120, key: 'Unknown', isLoop: loopInput.checked, centerFreq: 0 };
+                try {
+                    metadata.bpm = await detectBPM(blob, true);
+                    metadata.centerFreq = await getFFTCenterFrequency(audioBuffer, 30);
+                    metadata.key = extractKeyFromFilename(audioBuffer.name);
+                } catch (metaError) {
+                    console.warn(`Metadata error for ${audioBuffer.name}:`, metaError);
+                }
+                fileMetadata.set(audioBuffer.name, metadata);
+                fileBpmSpan.textContent = `BPM: ${metadata.bpm}, Key: ${metadata.key}, Freq: ${metadata.centerFreq.toFixed(0)}Hz, Type: ${metadata.isLoop ? 'Loop' : 'One-Shot'}`;
+                drawWaveformPerFile(audioBuffer, index);
+                updateProcessButtonState();
+
+                // Sync loop-all checkbox state
+                const allChecked = Array.from(document.querySelectorAll('.loop-checkbox')).every(cb => cb.checked);
+                loopAllCheckbox.checked = allChecked;
+                loopAllCheckbox.indeterminate = !allChecked && Array.from(document.querySelectorAll('.loop-checkbox')).some(cb => cb.checked);
+            }
+
+            recordedChunks[index] = [];
+            audioStreams[index].getTracks().forEach(track => track.stop());
+            audioStreams[index] = null;
+            mediaRecorders[index] = null;
+            const recordButton = document.getElementById(`record-btn-${index}`);
+            const stopRecordButton = document.getElementById(`stop-record-btn-${index}`);
+            if (recordButton) recordButton.disabled = false;
+            if (stopRecordButton) stopRecordButton.disabled = true;
+            showStatus(`Recording for track ${index + 1} complete`, 'success');
+        };
+
+        mediaRecorders[index].start();
+        const recordButton = document.getElementById(`record-btn-${index}`);
+        const stopRecordButton = document.getElementById(`stop-record-btn-${index}`);
+        if (recordButton) recordButton.disabled = true;
+        if (stopRecordButton) stopRecordButton.disabled = false;
+        showStatus(`Recording started for track ${index + 1}`, 'info');
+        console.log(`app.js: Started recording for track ${index}`);
+    } catch (error) {
+        console.error(`app.js: Error starting recording for track ${index}:`, error);
+        showStatus(`Failed to start recording: ${error.message}`, 'error');
+        const recordButton = document.getElementById(`record-btn-${index}`);
+        const stopRecordButton = document.getElementById(`stop-record-btn-${index}`);
+        if (recordButton) recordButton.disabled = false;
+        if (stopRecordButton) stopRecordButton.disabled = true;
+    }
+}
+
+function stopRecording(index) {
+    if (mediaRecorders[index] && mediaRecorders[index].state === 'recording') {
+        mediaRecorders[index].stop();
+        console.log(`app.js: Stopped recording for track ${index}`);
+    } else {
+        console.warn(`app.js: No active recording for track ${index}`);
+        showStatus('No active recording to stop.', 'error');
+    }
+}
+
 function updateProcessButtonState() {
-    const fileInputs = fileInputsContainer.querySelectorAll('input[type="file"]:not(#folder-input)');
+    const fileInputs = fileInputsContainer.querySelectorAll('input[type="file"]');
     let validBuffers = 0;
     audioBuffers.forEach((buffer, i) => {
         if (buffer && validateAudioBuffer(buffer, buffer.name)) {
@@ -273,9 +373,9 @@ function updateProcessButtonState() {
     processBtn.disabled = validBuffers === 0;
     console.log(`app.js: updateProcessButtonState - Valid buffers: ${validBuffers}, Track count: ${trackCount}, Button disabled: ${processBtn.disabled}, audioBuffers:`, audioBuffers.map(b => b ? b.name : null));
     if (validBuffers === 0) {
-        showStatus('No valid audio files loaded. Check file formats or console for errors.', 'error');
+        showStatus('No valid audio files or recordings loaded. Check file formats or console for errors.', 'error');
     } else {
-        showStatus(`${validBuffers} valid audio file(s) loaded.`, 'info');
+        showStatus(`${validBuffers} valid audio file(s)/recording(s) loaded.`, 'info');
         if (isAutoLoading && validBuffers > 0) {
             console.log('app.js: Auto-triggering processAudioFiles');
             processAudioFiles();
@@ -1083,26 +1183,47 @@ function startRealTimeLoop(buffer) {
 }
 
 function stopPlayback() {
-    console.log('app.js: Stopping playback');
-    isPlaying = false;
-    activeSources.forEach(({ source }) => {
-        try {
-            source.stop();
-            source.disconnect();
-        } catch (e) {
-            console.warn('app.js: Error stopping source:', e);
+    if (isPlaying) {
+        activeSources.forEach(({ source }) => {
+            try {
+                source?.stop();
+                source?.disconnect();
+            } catch (e) {
+                console.warn('app.js: Error stopping source:', e);
+            }
+        });
+        activeSources = [];
+        if (loopScheduler) {
+            clearTimeout(loopScheduler);
+            loopScheduler = null;
         }
-    });
-    activeSources = [];
-    if (loopScheduler) {
-        clearInterval(loopScheduler);
-        loopScheduler = null;
+        isPlaying = false;
+        processBtn.textContent = 'PROCESS AUDIO';
+        processBtn.classList.remove('stop-btn');
+        // Stop any ongoing recordings
+        mediaRecorders.forEach((recorder, index) => {
+            if (recorder && recorder.state === 'recording') {
+                recorder.stop();
+                if (audioStreams[index]) {
+                    audioStreams[index].getTracks().forEach(track => track.stop());
+                    audioStreams[index] = null;
+                }
+                mediaRecorders[index] = null;
+                recordedChunks[index] = [];
+                const recordButton = document.getElementById(`record-btn-${index}`);
+                const stopRecordButton = document.getElementById(`stop-record-btn-${index}`);
+                if (recordButton) recordButton.disabled = false;
+                if (stopRecordButton) stopRecordButton.disabled = true;
+            }
+        });
+        console.log('app.js: Playback and recordings stopped');
+        showStatus('Playback and recordings stopped', 'info');
+        const audio = document.getElementById('mixed-audio');
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
     }
-    if (audioContext) {
-        audioContext.suspend().catch(e => console.warn('app.js: Error suspending audioContext:', e));
-    }
- // Also stop the blinking when audio stops
-    stopNodeBlinking();
 }
 
 function restartAudioContext() {
@@ -1321,15 +1442,27 @@ function shuffleArray(array) {
 }
 
 function createFileInputs(count = trackCount) {
-      console.log(`Creating ${count} file inputs`);
+    console.log(`Creating ${count} file inputs`);
     const oldInputs = fileInputsContainer.querySelectorAll('.file-upload-input');
     oldInputs.forEach(el => el.remove());
     audioBuffers = new Array(count).fill(null);
     fileMetadata.clear();
     processingQueue = [];
     isProcessing = false;
+    // Reset recording resources
+    mediaRecorders.forEach((recorder, index) => {
+        if (recorder && recorder.state === 'recording') {
+            recorder.stop();
+        }
+        if (audioStreams[index]) {
+            audioStreams[index].getTracks().forEach(track => track.stop());
+        }
+    });
+    mediaRecorders = new Array(count).fill(null);
+    recordedChunks = new Array(count).fill().map(() => []);
+    audioStreams = new Array(count).fill(null);
 
-        loopAllCheckbox = document.getElementById('loop-all-checkbox');
+    loopAllCheckbox = document.getElementById('loop-all-checkbox');
     if (loopAllCheckbox) {
         loopAllCheckbox.addEventListener('change', function() {
             const shouldLoop = this.checked;
@@ -1397,42 +1530,51 @@ function createFileInputs(count = trackCount) {
         loopInput.id = `loop-input-${i}`;
         loopInput.className = 'loop-checkbox';
         loopInput.checked = true; // Default to checked
-        
-     loopInput.addEventListener('change', function() {
-    console.log(`Loop checkbox changed for input ${i}`);
-    const file = audioBuffers[i]?.name;
-    if (file) {
-        // Get or create metadata
-        let metadata = fileMetadata.get(file);
-        if (!metadata) {
-            metadata = { 
-                bpm: 120, 
-                key: 'Unknown', 
-                isLoop: this.checked, 
-                centerFreq: 0 
-            };
-        } else {
-            metadata.isLoop = this.checked;
-        }
-        fileMetadata.set(file, metadata);
-        
-        // Update UI if available
-        if (fileBpm) {
-            fileBpm.textContent = `BPM: ${metadata.bpm}, Key: ${metadata.key}, Freq: ${metadata.centerFreq.toFixed(0)}Hz, Type: ${metadata.isLoop ? 'Loop' : 'One-Shot'}`;
-        }
-        console.log(`app.js: Loop set to ${metadata.isLoop} for ${file}`);
-        
-        // Sync loop-all checkbox state
-        if (loopAllCheckbox) {
-            const allChecked = Array.from(document.querySelectorAll('.loop-checkbox'))
-                .every(cb => cb.checked);
-            loopAllCheckbox.checked = allChecked;
-            loopAllCheckbox.indeterminate = !allChecked && 
-                Array.from(document.querySelectorAll('.loop-checkbox'))
-                    .some(cb => cb.checked);
-        }
-    }
-});
+        const recordButton = document.createElement('button');
+        recordButton.id = `record-btn-${i}`;
+        recordButton.className = 'record-btn';
+        recordButton.textContent = 'Record';
+        const stopRecordButton = document.createElement('button');
+        stopRecordButton.id = `stop-record-btn-${i}`;
+        stopRecordButton.className = 'stop-record-btn';
+        stopRecordButton.textContent = 'Stop Recording';
+        stopRecordButton.disabled = true;
+
+        loopInput.addEventListener('change', function() {
+            console.log(`Loop checkbox changed for input ${i}`);
+            const file = audioBuffers[i]?.name;
+            if (file) {
+                // Get or create metadata
+                let metadata = fileMetadata.get(file);
+                if (!metadata) {
+                    metadata = { 
+                        bpm: 120, 
+                        key: 'Unknown', 
+                        isLoop: this.checked, 
+                        centerFreq: 0 
+                    };
+                } else {
+                    metadata.isLoop = this.checked;
+                }
+                fileMetadata.set(file, metadata);
+                
+                // Update UI if available
+                if (fileBpm) {
+                    fileBpm.textContent = `BPM: ${metadata.bpm}, Key: ${metadata.key}, Freq: ${metadata.centerFreq.toFixed(0)}Hz, Type: ${metadata.isLoop ? 'Loop' : 'One-Shot'}`;
+                }
+                console.log(`app.js: Loop set to ${metadata.isLoop} for ${file}`);
+                
+                // Sync loop-all checkbox state
+                if (loopAllCheckbox) {
+                    const allChecked = Array.from(document.querySelectorAll('.loop-checkbox'))
+                        .every(cb => cb.checked);
+                    loopAllCheckbox.checked = allChecked;
+                    loopAllCheckbox.indeterminate = !allChecked && 
+                        Array.from(document.querySelectorAll('.loop-checkbox'))
+                            .some(cb => cb.checked);
+                }
+            }
+        });
 
         input.addEventListener('change', () => {
             console.log(`File input ${input.id} changed`);
@@ -1453,6 +1595,9 @@ function createFileInputs(count = trackCount) {
             }
         });
 
+        recordButton.addEventListener('click', () => startRecording(i));
+        stopRecordButton.addEventListener('click', () => stopRecording(i));
+
         div.appendChild(label);
         div.appendChild(input);
         div.appendChild(fileName);
@@ -1461,6 +1606,8 @@ function createFileInputs(count = trackCount) {
         div.appendChild(waveformCanvas);
         div.appendChild(loopLabel);
         div.appendChild(loopInput);
+        div.appendChild(recordButton);
+        div.appendChild(stopRecordButton);
         fileInputsContainer.appendChild(div);
     }
     console.log(`app.js: Created ${count} file inputs`);
