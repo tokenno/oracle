@@ -59,18 +59,18 @@ html, body {
   }
   
   .parameter-node {
-    width: 35px !important;
-    height: 35px !important;
+    width: 30px !important;
+    height: 30px !important;
   }
   
   .node-process {
-    width: 55px !important;
-    height: 55px !important;
+    width: 50px !important;
+    height: 50px !important;
   }
   
   .node-file-inputs {
-    width: 45px !important;
-    height: 45px !important;
+    width: 40px !important;
+    height: 40px !important;
   }
   
   #control-panel {
@@ -107,8 +107,8 @@ html, body {
         }
         .parameter-node {
             position: absolute;
-            width: 40px !important;
-            height: 40px !important;
+            width: 30px !important;
+            height: 30px !important;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             cursor: pointer;
@@ -155,8 +155,8 @@ html, body {
         }
         
            .node-file-inputs {
-            width: 55px !important;
-            height: 55px !important;
+            width: 40px !important;
+            height: 40px !important;
             font-size: 12px;
             box-shadow: 0 0 15px currentColor !important;
         }
@@ -170,8 +170,8 @@ html, body {
         }
         
          .node-stop {
-            width: 45px !important;
-            height: 45px !important;
+            width: 50px !important;
+            height: 50px !important;
             font-size: 11px;
             box-shadow: 0 0 12px currentColor !important;
         }
@@ -483,8 +483,8 @@ html, body {
             opacity: 0.8;
             transition: opacity 0.3s;
             background: rgba(0, 0, 0, 0.7) !important;
-               width: 150px !important;  /* Adjust size as needed */
-    height: 150px !important;
+               width: 100px !important;  /* Adjust size as needed */
+    height: 100px !important;
     border-radius: 50%;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(123, 211, 247, 0.7);
@@ -497,8 +497,8 @@ html, body {
   position: absolute; /* ✅ Stay inside parent */
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 80%;
+  height: 80%;
 }
         #logo {
             position: absolute;
@@ -565,6 +565,42 @@ html, body {
             background: rgba(247, 123, 211, 0.6);
             transform: scale(1.2);
         }
+
+        .record-btn, .stop-record-btn {
+    padding: 5px 10px;
+    margin: 5px;
+    border: 1px solid #7bd3f7;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    transition: all 0.3s;
+}
+.record-btn {
+    background: rgba(40, 167, 69, 0.3);
+    color: #28a745;
+    border-color: #28a745;
+}
+.record-btn:hover:not(:disabled) {
+    background: rgba(40, 167, 69, 0.6);
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.7);
+}
+.record-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.stop-record-btn {
+    background: rgba(220, 53, 69, 0.3);
+    color: #dc3545;
+    border-color: #dc3545;
+}
+.stop-record-btn:hover:not(:disabled) {
+    background: rgba(220, 53, 69, 0.6);
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.7);
+}
+.stop-record-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
         @keyframes glow {
             0% { text-shadow: 0 0 5px rgba(123, 211, 247, 0.5); }
             50% { text-shadow: 0 0 10px rgba(123, 211, 247, 0.8); }
@@ -796,16 +832,16 @@ html, body {
         const manualContent = `
 <h1>[ o r a c L e ]</h1>
 
-<h2>Overview</h2>
+<h2 style="color: yellow;">Overview</h2>
 <p>The <strong>o r a c L e</strong> is an audio processing tool that blends multiple audio tracks into a cohesive mix.</p>
-<h2>Interface Elements</h2>
-<p>The app is centered around a mandala with interactive nodes, each controlling a specific function. Based on frequency  (FFT) and tempo analysis, in combination with user's adjustments of specific algorithmic functions, new soundscapes emerge. <BR> <BR> The functions of <strong> silences and mix blending, </strong> together with  <strong>Scale Selection, Scale Behavior and Playback Order, </strong> helps the [ o r a c L e ] to predict new soundscapes. </p>
+<h2 style="color: yellow;">Interface Elements</h2>
+<p>The app is centered around a mandala with interactive nodes, each controlling a specific function. Based on frequency (FFT) and tempo analysis, in combination with user's adjustments of specific algorithmic functions, new soundscapes emerge. <BR> <BR> The functions of <strong> silences and mix blending, </strong> together with <strong>Scale Selection, Scale Behavior and Playback Order, </strong> helps the [ o r a c L e ] to predict new soundscapes. </p>
 <p>For sound artists, [ o r a c L e ] becomes a dynamic playground for sonic experimentation. By blending algorithmic processing with intuitive controls, it transforms raw audio into evolving soundscapes. Real-time processing and generative algorithms act as a creative collaborator, revealing hidden musical structures in uploaded samples. Whether crafting minimalistic sonic textures, ambient beds, rhythmic glitches or microtonal collages, the app rewards curiosity with unexpected results, making it a tool for both intentional composition and happy accidents. </p>
-<h3>Key Components</h3>
+<h2 style="color: yellow;">Key Components</h3>
 <ul>
     <li><strong>Mandala Nodes</strong>: Circular controls around the central mandala, each tied to a parameter or action (e.g., track count, BPM, file uploads). Hover over a node to see its tooltip explanation (shown only until the node is first clicked).</li>
     <li><strong>Control Panel</strong>: A sidebar for fine-tuning parameters, appearing when a node is clicked.</li>
-    <li><strong>File Upload Panel</strong>: A central popup for uploading audio files.</li>
+    <li><strong>File Upload Panel</strong>: A central popup for uploading audio files or recording new audio.</li>
     <li><strong>Audio Player</strong>: A compact player for previewing and controlling the mixed audio.</li>
     <li><strong>Waveform Display</strong>: Visualizes the mixed audio's waveform in real-time, hidden after one audio loop.</li>
     <li><strong>Status Display</strong>: Shows temporary messages (e.g., "Track loaded") at the bottom-right.</li>
@@ -813,63 +849,52 @@ html, body {
     <li><strong>Waveform Node</strong>: A slowly pulsing node to toggle the waveform display.</li>
     <li><strong>o r a c L e Logo</strong>: A pulsating centerpiece tying the interface together.</li>
 </ul>
-<h2>How to Use</h2>
+<h2 style="color: yellow;">How to Use</h2>
+<ul>
     <li><strong>BEST METHOD:</strong> Start from the <strong>Number of Tracks Node</strong> (first Node on your right - see Tooltip) and follow the Nodes of the mandala down in series until you reach the <strong>Process Audio</strong> Node. Adjust settings as you go. </li>
-
-<li><strong>IMPORTANT:</strong> While learning the app, import sounds with a <strong>clear pitch and small in size</strong> (less than 10Mb). Some piano sounds samples are linked at the end of this Help to try. After you get familiarized with the app's logic, try more complex sounds. </li>
-
-<li>Set <strong>MAX BLEND</strong> around 80%. A basic feature of the app.</li>
-
-
-<li>Set <strong>Loop Time around ONE minute</strong> to render quicker (Default 5 minutes). <strong></li>
-
-<li>Check Loop</strong> on each track before Process Audio.</li>
-
-<li>Press <strong>Process Audio</strong> and wait to hear a new soundscape to emerge (Depending of the Loop Length Node and the size of the tracks, rendering times can vary.  </li>
-
-<li>Wait until 'Process Audio...Please Wait' message clears. Then sound starts automatically.</li>
-
-
-<li><strong>Experiment:</strong> Try different settings with the same imported sounds and observe sound differencies. </li>
-
-<li><strong>REALTIME:</strong> The [ o r a c L e ] predicts sounds in REALTIME. After rendering, play with available parameters and notice changes in the soundscape. </li>
-
-<li><strong>Alternative:</strong> Just set the number of tracks, import accordingly, check Loops on each one and hit Process Audio... Then just <strong>Play</strong> </li>
-
-<h2>Features</h2>
-
-<h3>1. Uploading Audio Files</h3>
+    <li><strong>IMPORTANT:</strong> While learning the app, import sounds with a <strong>clear pitch and small in size</strong> (less than 10Mb). Some piano sounds samples are linked at the end of this Help to try. After you get familiarized with the app's logic, try more complex sounds. </li>
+    <li>Set <strong>MAX BLEND</strong> around 80%. A basic feature of the app.</li>
+    <li>Set <strong>Loop Time around ONE minute</strong> to render quicker (Default 5 minutes).</li>
+    <li>Check <strong>Loop</strong> on each track before Process Audio.</li>
+    <li>Press <strong>Process Audio</strong> and wait to hear a new soundscape to emerge (Depending of the Loop Length Node and the size of the tracks, rendering times can vary.</li>
+    <li>Wait until 'Process Audio...Please Wait' message clears. Then sound starts automatically.</li>
+    <li><strong>Experiment:</strong> Try different settings with the same imported sounds and observe sound differences.</li>
+    <li><strong>REALTIME:</strong> The [ o r a c L e ] predicts sounds in REALTIME. After rendering, play with available parameters and notice changes in the soundscape.</li>
+    <li><strong>Alternative:</strong> Just set the number of tracks, import or record audio, check Loops on each one and hit Process Audio... Then just <strong>Play</strong>.</li>
+</ul>
+<h2 style="color: yellow;">Features</h2>
+<h2 style="color: yellow;">1. Uploading Audio Files</h3>
 <ul>
     <li><strong>Access</strong>: Click the <strong>Upload Files</strong> node (yellow-green, labeled "Upload Files"). Hover to see its tooltip before clicking.</li>
     <li><strong>Action</strong>: The file upload panel appears in the center. Drag and drop audio files (e.g., MP3, WAV) into the upload area or click to select files manually.</li>
     <li><strong>Details</strong>: The number of file slots depends on the <strong>Number of Tracks</strong> setting (2–10). Each slot shows the file name and a waveform preview after upload.</li>
     <li><strong>Status</strong>: The status display confirms each file loaded (e.g., "Track 1 loaded: song.mp3"). When all tracks are loaded, the panel closes automatically, and the status shows "All tracks loaded. Ready to process."</li>
 </ul>
-<h3>2. Setting Parameters</h3>
+<h2 style="color: yellow;">2. Setting Parameters</h3>
 <p>Click a parameter node to open the control panel on the right. Adjust settings and see real-time feedback in the status display. Hover over a node to see its tooltip (until clicked). Available parameters:</p>
 <ul>
-    <li><strong>Number of Tracks (2–10)</strong>: Sets how many audio files to upload. Default: 5.</li>
+    <li><strong>Number of Tracks (2–10)</strong>: Sets how many audio files to upload or record. Default: 5.</li>
     <li><strong>Project BPM (60–240)</strong>: Sets the project tempo for alignment (affects visualization, not playback).</li>
     <li><strong>Max Blend (0–100%)</strong>: Controls track overlap intensity.</li>
     <li><strong>Wet/Dry Mix (0–100%)</strong>: Balances reverb and original audio.</li>
     <li><strong>Reverb Time (0.1–5s)</strong>: Sets reverb decay length.</li>
     <li><strong>Loop Duration (0.1–10 min)</strong>: Defines the output mix duration.</li>
     <li><strong>Algorithm</strong>: Chooses track ordering (e.g., Sequential, Random, Markov Chain, Scale-based, Frequency-based, Tempo-based).</li>
-    <li><strong>Musical Scale</strong>: Filters tracks by scale (e.g., Major, Minor, Pentatonic and mnay more exotic scales).</li>
+    <li><strong>Musical Scale</strong>: Filters tracks by scale (e.g., Major, Minor, Pentatonic and many more exotic scales).</li>
     <li><strong>Scale Behavior</strong>: Defines scale application (Filter, Transpose, Reorder).</li>
     <li><strong>Playback Rate (0.5–2x)</strong>: Adjusts playback speed.</li>
     <li><strong>Preserve Pitch</strong>: Maintains pitch when changing playback rate (checked by default).</li>
     <li><strong>Silence Percentage (0–100%)</strong>: Adds silence between tracks.</li>
 </ul>
 <p><strong>Usage</strong>: Click a node (e.g., "Project BPM"), adjust the slider/input in the control panel, and see the status update (e.g., "Project BPM updated to 140"). The mandala pulses with each interaction. Tooltips disappear after clicking a node.</p>
-<h3>3. Processing Audio</h3>
+<h2 style="color: yellow;">3. Processing Audio</h3>
 <ul>
     <li><strong>Access</strong>: Click the <strong>Process Audio</strong> node (pink, labeled "Process Audio").</li>
-    <li><strong>Action</strong>: Combines uploaded tracks based on parameters (e.g., reverb, playback rate, algorithm). The process uses the Web Audio API to mix tracks offline.</li>
+    <li><strong>Action</strong>: Combines uploaded or recorded tracks based on parameters (e.g., reverb, playback rate, algorithm). The process uses the Web Audio API to mix tracks offline.</li>
     <li><strong>Status</strong>: Shows "Processing audio..." during processing and "Audio processed successfully" when complete. The audio player and waveform display appear automatically.</li>
-    <li><strong>Note</strong>: Ensure all required tracks are uploaded, or the status display will show an error.</li>
+    <li><strong>Note</strong>: Ensure all required tracks are uploaded or recorded, or the status display will show an error.</li>
 </ul>
-<h3>4. Playing and Controlling Audio</h3>
+<h2 style="color: yellow;">4. Playing and Controlling Audio</h3>
 <ul>
     <li><strong>Access</strong>: Click the <strong>Show/Hide Player</strong> node (cyan, labeled "Show/Hide Player") to toggle the audio player.</li>
     <li><strong>Controls</strong>:
@@ -877,133 +902,136 @@ html, body {
             <li><strong>Play/Pause</strong>: Use the audio player's built-in controls.</li>
             <li><strong>Stop</strong>: Click the <strong>Stop Audio</strong> node (magenta, labeled "Stop Audio") or the stop button (■) on the player to stop and reset playback.</li>
             <li><strong>Close Player</strong>: Click the close button (×) on the player to hide it.</li>
- <li><strong>IMPORTANT</strong>: The app accepts files of any Sampling Rate with a file limit of 50Mb. </li>
-     <li><strong>IMPORTANT</strong>: Wait until 'Audio Rendering Complete' to hear the final output. Large files takes time to process. </li>
- <li><strong>IMPORTANT</strong>: Start with small loop times, e.g 1 minute (default 5 minutes) and also start with small file size (less than 10Mb.</li>
-<li><strong>IMPORTANT</strong>: Depending of the audio content and Pitch Detection algorithm used (Filter, Transpose, Reorder), Process Audio may not be able to continue.</li>
- <li><strong>More:</strong>: When you get the app's logic, move to larger times and sizes (expect long rendering times)</li>
+            <li><strong>IMPORTANT</strong>: The app accepts files of any Sampling Rate with a file limit of 50Mb.</li>
+            <li><strong>IMPORTANT</strong>: Wait until 'Audio Rendering Complete' to hear the final output. Large files take time to process.</li>
+            <li><strong>IMPORTANT</strong>: Start with small loop times, e.g., 1 minute (default 5 minutes) and also start with small file size (less than 10Mb).</li>
+            <li><strong>IMPORTANT</strong>: Depending on the audio content and Pitch Detection algorithm used (Filter, Transpose, Reorder), Process Audio may not be able to continue.</li>
+            <li><strong>More:</strong> When you get the app's logic, move to larger times and sizes (expect long rendering times).</li>
         </ul>
     </li>
     <li><strong>Visualization</strong>: The waveform display (toggled separately) scrolls in real-time, and the logo and nodes glow in sync with the audio's intensity.</li>
 </ul>
-<h3>5. Toggling Waveform Display</h3>
+<h2 style="color: yellow;">5. Toggling Waveform Display</h3>
 <ul>
     <li><strong>Access</strong>: Click the <strong>Show/Hide Waveform</strong> node (purple, labeled "Show/Hide Waveform") to toggle the waveform display.</li>
     <li><strong>Action</strong>: Shows or hides the real-time scrolling waveform of the mixed audio. The waveform automatically hides after the audio completes one full loop.</li>
     <li><strong>Visualization</strong>: The waveform node pulses slowly with a glowing effect, enhancing the cyberpunk aesthetic.</li>
 </ul>
-<h3>6. Downloading the Mix</h3>
+<h2 style="color: yellow;">6. Downloading the Mix</h3>
 <ul>
     <li><strong>Access</strong>: In the control panel (after clicking "Process Audio"), click the <strong>Download Mix</strong> button.</li>
     <li><strong>Action</strong>: Downloads the processed mix as a WAV file named "mixed-audio.wav".</li>
     <li><strong>Status</strong>: Shows "Downloading mix..." during the process.</li>
 </ul>
-<h3>Scale Behavior with Imported Audio</h3>
-<p>The Scale Behavior options transform your audio files in different musical ways:</p>
-
+<h2 style="color: yellow;">7. Recording Audio</h3>
+<ul>
+    <li><strong>Access</strong>: Click the <strong>Upload Files</strong> node (yellow-green, labeled "Upload Files") to open the file upload panel. Each track slot includes a <strong>Record</strong> button (green) and a <strong>Stop Recording</strong> button (red).</li>
+    <li><strong>Action</strong>: Click the <strong>Record</strong> button to start recording audio via your device's microphone. Grant microphone permission when prompted by the browser. Click <strong>Stop Recording</strong> to save the recording. The recorded audio appears in the track slot with a filename (e.g., "recording_track_1.webm"), a waveform preview, and metadata (BPM, key, frequency).</li>
+    <li><strong>Details</strong>: Recordings are saved as audio buffers and treated like uploaded files, allowing integration with looping, scale behavior, and processing. Each track can have either an uploaded file or a recording, not both. The <strong>Loop</strong> checkbox applies to recordings, and the <strong>Loop All Files</strong> option syncs their loop state.</li>
+    <li><strong>Status</strong>: Shows "Recording started for track X" when recording begins and "Recording for track X complete" when stopped. Errors (e.g., microphone access denied) are displayed (e.g., "Failed to start recording: Permission denied").</li>
+    <li><strong>Notes</strong>:
+        <ul>
+            <li>Recordings require a secure context (HTTPS or localhost) and browser support for the Web Audio API and MediaRecorder (Chrome, Firefox recommended).</li>
+            <li>Keep recordings short (e.g., under 1 minute) for faster processing, especially with high track counts or long loop durations.</li>
+            <li>Recordings are automatically analyzed for BPM, key, and frequency, similar to uploaded files, and can be processed with the same algorithms and scale behaviors.</li>
+            <li>Ensure microphone permissions are granted, and check browser compatibility if recording fails.</li>
+        </ul>
+    </li>
+</ul>
+<h2 style="color: yellow;">8. Scale Behavior with Imported Audio</h3>
+<p>The Scale Behavior options transform your audio files or recordings in different musical ways:</p>
 <ul>
     <li><strong>Filter</strong>:
         <ul>
-            <li>Only keeps audio files that match the selected scale</li>
-            <li>Files not in the scale are removed from the mix</li>
-            <li>Best for curated collections where you want strict harmonic consistency</li>
-            <li>Example: In C Major scale, only files detected as C, D, E, F, G, A, or B will be used</li>
+            <li>Only keeps audio files or recordings that match the selected scale.</li>
+            <li>Files or recordings not in the scale are removed from the mix.</li>
+            <li>Best for curated collections where you want strict harmonic consistency.</li>
+            <li>Example: In C Major scale, only files or recordings detected as C, D, E, F, G, A, or B will be used.</li>
         </ul>
     </li>
-    
     <li><strong>Transpose</strong>:
         <ul>
-            <li>Automatically shifts pitches of all files to match the selected scale</li>
-            <li>Preserves the original character while ensuring harmonic compatibility</li>
-            <li>May cause slight artifacts with complex/polyphonic audio</li>
-            <li>Example: A D# file would be transposed to D in C Major scale</li>
+            <li>Automatically shifts pitches of all files or recordings to match the selected scale.</li>
+            <li>Preserves the original character while ensuring harmonic compatibility.</li>
+            <li>May cause slight artifacts with complex/polyphonic audio.</li>
+            <li>Example: A D# file or recording would be transposed to D in C Major scale.</li>
         </ul>
     </li>
-    
     <li><strong>Reorder</strong>:
         <ul>
-            <li>Keeps all files but rearranges them in scale order</li>
-            <li>Files in-scale appear first, followed by out-of-scale files</li>
-            <li>Creates a musically ascending/descending progression</li>
-            <li>Example: Files would play as C, D, E, F, then any remaining files</li>
+            <li>Keeps all files or recordings but rearranges them in scale order.</li>
+            <li>Files or recordings in-scale appear first, followed by out-of-scale ones.</li>
+            <li>Creates a musically ascending/descending progression.</li>
+            <li>Example: Files or recordings would play as C, D, E, F, then any remaining ones.</li>
         </ul>
     </li>
 </ul>
-
-<p><strong>Detection Method</strong>: The system analyzes each file's:
+<p><strong>Detection Method</strong>: The system analyzes each file or recording's:
     <ul>
         <li>Spectral centroid (dominant frequency)</li>
-        <li>Filename for key hints (e.g., "C_Melody.wav")</li>
+        <li>Filename for key hints (e.g., "C_Melody.wav" or "recording_track_1.webm")</li>
         <li>Harmonic content via FFT analysis</li>
     </ul>
 </p>
-
-<h3>Algorithm Behavior with Imported Audio</h3>
-<p>The Algorithm determines how your files are sequenced in the mix:</p>
-
+<h2 style="color: yellow;">9. Algorithm Behavior with Imported Audio</h3>
+<p>The Algorithm determines how your files or recordings are sequenced in the mix:</p>
 <ul>
     <li><strong>Sequential</strong>:
         <ul>
-            <li>Plays files in upload order (Track 1 → Track 2 → etc.)</li>
-            <li>Creates predictable, structured mixes</li>
+            <li>Plays files or recordings in upload or recording order (Track 1 → Track 2 → etc.).</li>
+            <li>Creates predictable, structured mixes.</li>
         </ul>
     </li>
-    
     <li><strong>Random</strong>:
         <ul>
-            <li>Shuffles files with no repeating pattern</li>
-            <li>Produces unexpected combinations each time</li>
+            <li>Shuffles files or recordings with no repeating pattern.</li>
+            <li>Produces unexpected combinations each time.</li>
         </ul>
     </li>
-    
     <li><strong>Markov Chain</strong>:
         <ul>
-            <li>Creates semi-random sequences based on transition probabilities</li>
-            <li>Learns patterns from your file characteristics</li>
-            <li>Balances randomness with musical flow</li>
+            <li>Creates semi-random sequences based on transition probabilities.</li>
+            <li>Learns patterns from your file or recording characteristics.</li>
+            <li>Balances randomness with musical flow.</li>
         </ul>
     </li>
-    
     <li><strong>Scale-based Order</strong>:
         <ul>
-            <li>Ascending: Low notes → high notes in the scale</li>
-            <li>Descending: High notes → low notes in the scale</li>
-            <li>Creates melodic progressions</li>
+            <li>Ascending: Low notes → high notes in the scale.</li>
+            <li>Descending: High notes → low notes in the scale.</li>
+            <li>Creates melodic progressions for files or recordings.</li>
         </ul>
     </li>
-    
     <li><strong>Frequency-based Order</strong>:
         <ul>
-            <li>Ascending: Darker sounds → brighter sounds</li>
-            <li>Descending: Bright sounds → dark sounds</li>
-            <li>Creates timbral evolution</li>
+            <li>Ascending: Darker sounds → brighter sounds.</li>
+            <li>Descending: Bright sounds → dark sounds.</li>
+            <li>Creates timbral evolution for files or recordings.</li>
         </ul>
     </li>
-    
     <li><strong>Tempo-based Order</strong>:
         <ul>
-            <li>Ascending: Slower BPM → faster BPM</li>
-            <li>Descending: Faster BPM → slower BPM</li>
-            <li>Creates rhythmic development</li>
+            <li>Ascending: Slower BPM → faster BPM.</li>
+            <li>Descending: Faster BPM → slower BPM.</li>
+            <li>Creates rhythmic development for files or recordings.</li>
         </ul>
     </li>
 </ul>
-
 <p><strong>Pro Tip</strong>: Combine Scale Behavior with Algorithms for powerful results:
     <ul>
-        <li>Filter + Markov Chain = Cohesive yet surprising harmonic mixes</li>
-        <li>Transpose + Scale Order = Perfect ascending/descending melodies</li>
-        <li>Reorder + Frequency Order = Evolving timbral landscapes</li>
+        <li>Filter + Markov Chain = Cohesive yet surprising harmonic mixes.</li>
+        <li>Transpose + Scale Order = Perfect ascending/descending melodies.</li>
+        <li>Reorder + Frequency Order = Evolving timbral landscapes.</li>
     </ul>
 </p>
-<h3>8. Visual Feedback</h3>
+<h2 style="color: yellow;">10. Visual Feedback</h3>
 <ul>
     <li><strong>Mandala</strong>: Nodes glow and pulse when clicked or during audio playback, with colors matching their function (e.g., cyan for player, purple for waveform).</li>
     <li><strong>Fractal Canvas</strong>: A dynamic background that scales and rotates, reacting to time and audio.</li>
     <li><strong>Logo</strong>: The "o r a c L e" text glows with a cybernetic pulse, intensifying with audio output.</li>
-    <li><strong>Waveforms</strong>: Each uploaded track shows a waveform in the file upload panel, and the mixed audio has a scrolling waveform in the waveform display.</li>
+    <li><strong>Waveforms</strong>: Each uploaded or recorded track shows a waveform in the file upload panel, and the mixed audio has a scrolling waveform in the waveform display.</li>
 </ul>
-<h3>9. Accessing Help</h3>
+<h2 style="color: yellow;">11. Accessing Help</h3>
 <ul>
     <li><strong>Access</strong>: Click the <strong>Help</strong> node (teal, labeled "Help") in the mandala.</li>
     <li><strong>Action</strong>: Opens a popup panel displaying this manual. Click the close button (×) to dismiss it.</li>
@@ -1011,41 +1039,36 @@ html, body {
 </ul>
 <h2>Tips for Use</h2>
 <ul>
-    <li><strong>File Formats</strong>: Use common audio formats (MP3, WAV). Ensure files are not corrupted.</li>
-    <li><strong>Track Count</strong>: Set the number of tracks before uploading to avoid resetting uploads.</li>
-    <li><strong>Processing Time</strong>: Large files or long loop durations may take longer to process.</li>
-    <li><strong>Browser Compatibility</strong>: Use a modern browser (Chrome, Firefox) with Web Audio API support.</li>
+    <li><strong>File Formats</strong>: Use common audio formats (MP3, WAV) for uploads. Recordings are saved as WEBM.</li>
+    <li><strong>Track Count</strong>: Set the number of tracks before uploading or recording to avoid resetting.</li>
+    <li><strong>Processing Time</strong>: Large files or long recordings may take longer to process.</li>
+    <li><strong>Browser Compatibility</strong>: Use a modern browser (Chrome, Firefox) with Web Audio API and MediaRecorder support for recording.</li>
     <li><strong>Responsive Design</strong>: The interface adapts to window size, but nodes may reposition on resize.</li>
 </ul>
-<h2>Precautions</h2>
+<h2 style="color: yellow;">Precautions</h2>
 <ul>
-    <li><strong>File Size - Type Limits</strong>: Maximum File Size: 50MB per file (hardcoded limit). Supported Formats: WAV (Any Sampling Rate and Bit Depth, however stay at 44.1, 16Bit for quicker rendering), MP3, OGG. </li>
-  <li><strong>Browser-Specific Issues</strong>: Safari: May have issues with Web Audio API timing, however webkitAudioContext fallback is included. Mobile Browsers: Auto-play restrictions (audio must start via user gesture) and  Limited memory for large files.</li>
-    <li><strong>Avoid</strong>: Silent Files (will fail validation). Corrupted Headers (WAV/MP3 with bad metadata). Very Short Files (<0.5s may break BPM detection). Keep in mind that Polyphonic Music pitch detection works best on monophonic sounds.</li>
-    <li><strong>Memory Intensive Operations</strong>: Avoid processing multiple long files simultaneously. Extreme reverb times (>5s). High track counts (8+) with long loops (>5min).</li>
+    <li><strong>File Size - Type Limits</strong>: Maximum File Size: 50MB per file or recording (hardcoded limit). Supported Formats: WAV (Any Sampling Rate and Bit Depth, prefer 44.1kHz, 16Bit for quicker rendering), MP3, OGG, WEBM (recordings).</li>
+    <li><strong>Browser-Specific Issues</strong>: Safari: May have issues with Web Audio API timing, though webkitAudioContext fallback is included. Mobile Browsers: Auto-play restrictions (audio must start via user gesture) and limited memory for large files or recordings.</li>
+    <li><strong>Avoid</strong>: Silent Files or Recordings (will fail validation). Corrupted Headers (WAV/MP3 with bad metadata). Very Short Files or Recordings (<0.5s may break BPM detection). Polyphonic Music pitch detection works best on monophonic sounds.</li>
+    <li><strong>Memory Intensive Operations</strong>: Avoid processing multiple long files or recordings simultaneously, extreme reverb times (>5s), or high track counts (8+) with long loops (>5min).</li>
 </ul>
-<h2>Troubleshooting</h2>
+<h2 style="color: yellow;">Troubleshooting</h2>
 <ul>
     <li><strong>No Status Messages</strong>: Ensure JavaScript is enabled. Check the console (F12) for errors.</li>
-  <li><strong>Invalid Audio Buffer</strong>: A common issue where one of the uploaded files is larger in time than the selected Loop Time. Upload another file or adjust Loop Time.</li>
-    <li><strong>Audio Not Playing</strong>: Verify files are valid and audio output is not muted.</li>
-    <li><strong>Processing Fails</strong>: Check if all tracks are uploaded and parameters are valid.</li>
+    <li><strong>Invalid Audio Buffer</strong>: A common issue where an uploaded file or recording is larger in time than the selected Loop Time. Upload or record another file or adjust Loop Time.</li>
+    <li><strong>Audio Not Playing</strong>: Verify files or recordings are valid and audio output is not muted.</li>
+    <li><strong>Recording Fails</strong>: Check microphone permissions, ensure a secure context (HTTPS or localhost), and use a compatible browser (Chrome, Firefox).</li>
+    <li><strong>Processing Fails</strong>: Check if all tracks are uploaded or recorded and parameters are valid.</li>
     <li><strong>Nodes Not Responding</strong>: Refresh the page and ensure the browser window is focused.</li>
 </ul>
-<h2>Links to Audio Files For Testing</h2>
+<h2 style="color: yellow;">Links to Audio Files For Testing</h2>
 <ul>
-
+    <li><a href="https://github.com/tokenno/oracle/tree/main/mp3" style="color:yellow;">Test Audio Files for five tracks.</a></li>
+</ul>
 <h2>Comments, Bugs, Suggestions</h2>
 <ul>
-    <li><strong>Contact</strong>: tokenomusic@gmail.com </li>
-    <li><a href="http://tokeno.net"  style="color:yellow;"> Visit tokeno.net</a></li>
-
-</ul>
-<h2>Links to Audio Files For Testing</h2>
-<ul>
-  
-    <li><a href="https://github.com/tokenno/oracle/tree/main/mp3" style="color:yellow;"> Test Audio Files for five tracks.</a></li>
- 
+    <li><strong>Contact</strong>: tokenomusic@gmail.com</li>
+    <li><a href="http://tokeno.net" style="color:yellow;">Visit tokeno.net</a></li>
 </ul>
 <p><em>tokeno.net [ o r a c L e ]</em></p>
         `;
