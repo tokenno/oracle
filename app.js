@@ -258,6 +258,53 @@ function validateAudioBuffer(buffer, fileName) {
     return true;
 }
 
+function clearMemory() {
+    if (!confirm('This will stop all playback and recordings and clear all loaded files. Continue?')) {
+        return;
+    }
+    console.log('app.js: Clearing application memory');
+    try {
+        // Stop playback and clear active sources
+        stopPlayback();
+        
+        // Clear audio buffers and metadata
+        audioBuffers = new Array(Math.max(2, trackCount || 5)).fill(null);
+        fileMetadata.clear();
+        processingQueue = [];
+        isProcessing = false;
+        
+        // Clear file input UI
+        const fileInputs = fileInputsContainer.querySelectorAll('.あなたのファイルアップロード入力');
+        fileInputs.forEach(div => {
+            const fileName = div.querySelector('.file-name');
+            const fileError = div.querySelector('.file-error');
+            const fileBpm = div.querySelector('.file-bpm');
+            const input = div.querySelector('input[type="file"]');
+            if (fileName) fileName.textContent = '';
+            if (fileError) fileError.textContent = '';
+            if (fileBpm) fileBpm.textContent = '';
+            if (input) input.value = '';
+        });
+
+        // Clear Markov chain
+        markovChain = null;
+        
+        // Reset mixed audio
+        const mixedAudio = document.getElementById('mixed-audio');
+        if (mixedAudio && mixedAudio.src) {
+            URL.revokeObjectURL(mixedAudio.src);
+            mixedAudio.removeAttribute('src');
+        }
+        
+        // Update UI
+        updateProcessButtonState();
+        showStatus('Application memory cleared', 'success');
+    } catch (error) {
+        console.error('app.js: Error clearing memory:', error);
+        showStatus(`Error clearing memory: ${error.message}`, 'error');
+    }
+}
+
 async function startRecording(index) {
     try {
         if (!audioContext) {
@@ -1184,22 +1231,35 @@ function startRealTimeLoop(buffer) {
 
 function stopPlayback() {
     if (isPlaying) {
+        // Stop all audio sources
         activeSources.forEach(({ source }) => {
             try {
                 source?.stop();
                 source?.disconnect();
             } catch (e) {
-                console.warn('app.js: Error stopping source:', e);
+                console.warn('Error stopping source:', e);
             }
         });
         activeSources = [];
+        
+        // Clear the loop scheduler if it exists
         if (loopScheduler) {
-            clearTimeout(loopScheduler);
+            clearInterval(loopScheduler);
             loopScheduler = null;
         }
+        
         isPlaying = false;
-        processBtn.textContent = 'PROCESS AUDIO';
-        processBtn.classList.remove('stop-btn');
+        
+        // Explicitly stop blinking
+        stopNodeBlinking();
+        
+        // Reset UI
+        const processBtn = document.getElementById('process-btn');
+        if (processBtn) {
+            processBtn.textContent = 'PROCESS AUDIO';
+            processBtn.classList.remove('stop-btn');
+        }
+        
         // Stop any ongoing recordings
         mediaRecorders.forEach((recorder, index) => {
             if (recorder && recorder.state === 'recording') {
@@ -1216,13 +1276,16 @@ function stopPlayback() {
                 if (stopRecordButton) stopRecordButton.disabled = true;
             }
         });
-        console.log('app.js: Playback and recordings stopped');
-        showStatus('Playback and recordings stopped', 'info');
+        
+        // Stop the audio element if it exists
         const audio = document.getElementById('mixed-audio');
         if (audio) {
             audio.pause();
             audio.currentTime = 0;
         }
+        
+        console.log('Playback and blinking stopped');
+        showStatus('Playback stopped', 'info');
     }
 }
 
@@ -1241,11 +1304,14 @@ function restartAudioContext() {
 // In your processAudioFiles function, modify it like this:
 
 async function processAudioFiles() {
-    console.log('app.js: Processing audio files');
+    console.log('Processing audio files');
     const statusDisplay = document.getElementById('status-display');
     const downloadBtn = document.getElementById('download-btn');
     
     try {
+        // Stop any existing blinking before starting new processing
+        stopNodeBlinking();
+        
         statusDisplay.innerHTML = '<div class="status-message info">Processing audio... Please wait</div>';
         statusDisplay.style.display = 'block';
         statusDisplay.style.opacity = '1';
@@ -1308,22 +1374,31 @@ async function processAudioFiles() {
             }
             mixedAudio._previousBlobUrl = mixedAudio.src;
 
-  mixedAudio.onplay = () => {
-    statusDisplay.style.opacity = '0';
-    setTimeout(() => {
-        statusDisplay.style.display = 'none';
-        startTempoSyncedBlinking(); // Use the new function
-    }, 500);
-};
-            mixedAudio.play().catch(e => {
-                console.warn('app.js: Error playing mixed audio:', e);
-                showStatus('Error playing audio. Click play manually.', 'error');
-            });
-        }
+            // Set up playback event handlers
+            mixedAudio.onplay = () => {
+                statusDisplay.style.opacity = '0';
+                setTimeout(() => {
+                    statusDisplay.style.display = 'none';
+                    // Start blinking only when audio actually plays
+                    startTempoSyncedBlinking();
+                }, 500);
+            };
 
-        startRealTimeLoop(mixedBuffer);
+            mixedAudio.onpause = mixedAudio.onended = () => {
+                stopNodeBlinking();
+            };
+
+            try {
+                await mixedAudio.play();
+                startRealTimeLoop(mixedBuffer);
+            } catch (e) {
+                console.warn('Error playing mixed audio:', e);
+                showStatus('Error playing audio. Click play manually.', 'error');
+                stopNodeBlinking();
+            }
+        }
     } catch (error) {
-        console.error('app.js: Error processing audio files:', error);
+        console.error('Error processing audio files:', error);
         let errorMessage = error.message;
         if (error.message.includes('non-finite') || error.message.includes('timing')) {
             errorMessage = 'Invalid timing parameters. Please check: \n' +
@@ -1334,6 +1409,7 @@ async function processAudioFiles() {
         
         showStatus(`Error: ${errorMessage}`, 'error');
         if (downloadBtn) downloadBtn.disabled = true;
+        stopNodeBlinking();
         
         const mixedAudio = document.getElementById('mixed-audio');
         if (mixedAudio && mixedAudio.src) {
@@ -1741,6 +1817,11 @@ function setupEventListeners() {
         const testToneBtn = document.getElementById('test-tone-btn');
         const downloadBtn = document.getElementById('download-btn');
         const stopBtn = document.getElementById('stop-btn');
+        const clearMemoryBtn = document.getElementById('clear-memory-btn');
+    
+        if (clearMemoryBtn) {
+        clearMemoryBtn.addEventListener('click', clearMemory);
+    }
 
         if (trackCountInput) {
             trackCountInput.addEventListener('change', () => {
