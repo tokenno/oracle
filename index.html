@@ -511,8 +511,8 @@ html, body {
             opacity: 0.8;
             transition: opacity 0.3s;
             background: rgba(0, 0, 0, 0.7) !important;
-               width: 80px !important;  /* Adjust size as needed */
-    height: 80px !important;
+               width: 100px !important;  /* Adjust size as needed */
+    height: 100px !important;
     border-radius: 50%;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(123, 211, 247, 0.7);
@@ -659,14 +659,17 @@ html, body {
             animation: ripple 1s linear;
             z-index: 5;
         }
-.parameter-node.blinking {
-    animation: random-blink var(--blink-duration) infinite alternate;
-}
-
-@keyframes random-blink {
-    0% { opacity: 0.3; }
-    100% { opacity: 1; }
-}
+.parameter-node {
+        transition: box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+    .parameter-node.blinking {
+        animation: blink var(--blink-duration, 500ms) ease-in-out;
+        box-shadow: 0 0 10px var(--glow-color, rgba(255, 255, 255, 0.8));
+    }
+    @keyframes blink {
+        0% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
     </style>
 </head>
 <body>
@@ -844,6 +847,7 @@ html, body {
     <div class="button-group">
         <button id="process-btn">PROCESS AUDIO</button>
         <button id="download-btn" disabled>MIX DOWNLOAD</button>
+        <button id="clear-memory-btn">CLEAR MEMORY</button>
     </div>
     <span class="tooltip">Audio processing controls</span>
 </div>
@@ -883,8 +887,8 @@ html, body {
 <h2 style="color: yellow;">Overview</h2>
 <p>The <strong>o r a c L e</strong> is an audio processing tool that blends multiple audio tracks into a cohesive mix.</p>
 <h2 style="color: yellow;">Interface Elements</h2>
-<p>The app is centered around a mandala with interactive nodes, each controlling a specific function. Based on frequency (FFT) and tempo analysis, in combination with user's adjustments of specific algorithmic functions, new soundscapes emerge. <BR> <BR> The functions of <strong> silences and mix blending, </strong> together with <strong>Scale Selection, Scale Behavior and Playback Order, </strong> helps the [ o r a c L e ] to predict new soundscapes. </p>
-<p>For sound artists, [ o r a c L e ] becomes a dynamic playground for sonic experimentation. By blending algorithmic processing with intuitive controls, it transforms raw audio into evolving soundscapes. Real-time processing and generative algorithms act as a creative collaborator, revealing hidden musical structures in uploaded samples. Whether crafting minimalistic sonic textures, ambient beds, rhythmic glitches or microtonal collages, the app rewards curiosity with unexpected results, making it a tool for both intentional composition and happy accidents. </p>
+<p>The app is centered around a mandala with interactive nodes, each controlling a specific function. The combination of user adjustments with frequency and tempo analysis, make new soundscapes to emerge. <BR> <BR> The functions of <strong> silences and mix blending, </strong> together with <strong>Scale Selection, Scale Behavior and Playback Order, </strong> helps the [ o r a c L e ] to predict new soundscapes. </p>
+<p>For sound artists, the app becomes a dynamic playground for sonic experimentation. By blending algorithmic processing with intuitive controls, it transforms raw audio into evolving soundscapes. Real-time processing and generative algorithms act as a creative collaborator, revealing hidden musical structures in uploaded samples. Whether crafting minimalistic sonic textures, ambient beds, rhythmic glitches or microtonal collages, the app rewards curiosity with unexpected results, making it a tool for both intentional composition and happy accidents. </p>
 <h2 style="color: yellow;">Key Components</h3>
 <ul>
     <li><strong>Mandala Nodes</strong>: Circular controls around the central mandala, each tied to a parameter or action (e.g., track count, BPM, file uploads). Hover over a node to see its tooltip explanation (shown only until the node is first clicked).</li>
@@ -900,7 +904,7 @@ html, body {
 <h2 style="color: yellow;">How to Use</h2>
 <ul>
     <li><strong>BEST METHOD:</strong> Start from the <strong>Number of Tracks Node</strong> (first Node on your right - see Tooltip) and follow the Nodes of the mandala down in series until you reach the <strong>Process Audio</strong> Node. Adjust settings as you go. </li>
-    <li><strong>IMPORTANT:</strong> While learning the app, import sounds with a <strong>clear pitch and small in size</strong> (less than 10Mb). Some piano sounds samples are linked at the end of this Help to try. After you get familiarized with the app's logic, try more complex sounds. </li>
+    <li><strong>IMPORTANT:</strong> If you really want to dive into the app, start with sounds with a <strong>clear pitch and small in size</strong> (less than 10Mb). Some piano sounds are linked at the end of this Help to try. Using pitched sounds at start, will give you a better understanding behind the logic of the app. After getting yourself familiarized with the app's logic, try more complex sounds. </li>
     <li>Set <strong>MAX BLEND</strong> around 80%. A basic feature of the app.</li>
     <li>Set <strong>Loop Time around ONE minute</strong> to render quicker (Default 5 minutes).</li>
     <li>Check <strong>Loop</strong> on each track before Process Audio.</li>
@@ -909,6 +913,7 @@ html, body {
     <li><strong>Experiment:</strong> Try different settings with the same imported sounds and observe sound differences.</li>
     <li><strong>REALTIME:</strong> The [ o r a c L e ] predicts sounds in REALTIME. After rendering, play with available parameters and notice changes in the soundscape.</li>
     <li><strong>Alternative:</strong> Just set the number of tracks, import or record audio, check Loops on each one and hit Process Audio... Then just <strong>Play</strong>.</li>
+
 </ul>
 <h2 style="color: yellow;">Features</h2>
 <h2 style="color: yellow;">1. Uploading Audio Files</h3>
@@ -1176,9 +1181,9 @@ html, body {
                 resizeCanvas(windowWidth, windowHeight);
             }
             
-            let isBlinkingActive = false;
+      let isBlinkingActive = false;
 let blinkIntervals = [];
-            
+
 function calculateBlinkSpeed() {
     const bpm = parseInt(document.getElementById('project-bpm-slider')?.value) || 120;
     const playbackRate = parseFloat(document.getElementById('playback-rate')?.value) || 1.0;
@@ -1212,13 +1217,16 @@ function startTempoSyncedBlinking() {
         // Clear all blinking first
         nodes.forEach(node => node.classList.remove('blinking'));
         
-        // Select a random node (70% chance)
-        if (Math.random() > 0.3) {
-            const randomIndex = Math.floor(Math.random() * nodes.length);
-            const node = nodes[randomIndex];
+        // Select 3 random nodes to blink (or fewer if nodes.length < 3)
+        const nodesArray = Array.from(nodes);
+        const numNodesToBlink = Math.min(3, nodesArray.length);
+        const nodesToBlink = nodesArray
+            .sort(() => Math.random() - 0.5)
+            .slice(0, numNodesToBlink);
+        
+        // Apply blinking to selected nodes
+        nodesToBlink.forEach(node => {
             const nodeColor = getComputedStyle(node).getPropertyValue('color').trim() || 'rgba(255, 255, 255, 0.8)';
-            
-            // Set dynamic properties
             node.style.setProperty('--glow-color', nodeColor);
             node.style.setProperty('--blink-duration', `${blinkDuration}ms`);
             node.classList.add('blinking');
@@ -1227,7 +1235,7 @@ function startTempoSyncedBlinking() {
             setTimeout(() => {
                 node.classList.remove('blinking');
             }, blinkDuration);
-        }
+        });
         
         // Schedule next blink with tempo-synced timing
         const nextBlinkDelay = blinkDuration * (0.5 + Math.random() * 0.5); // 50-100% of blink duration
@@ -1238,15 +1246,13 @@ function startTempoSyncedBlinking() {
     blinkNode();
 }
 
-// Update Stoop Function
 function stopNodeBlinking() {
-    console.log('Stopping all node blinking');
     isBlinkingActive = false;
-    blinkIntervals.forEach(interval => clearTimeout(interval));
+    console.log('app.js: Stopping blinking');
+    blinkIntervals.forEach(clearTimeout);
     blinkIntervals = [];
-    document.querySelectorAll('.parameter-node').forEach(node => {
-        node.classList.remove('blinking');
-    });
+    const nodes = document.querySelectorAll('.parameter-node:not(#node-waveform)');
+    nodes.forEach(node => node.classList.remove('blinking'));
 }
 
             // Position nodes dynamically
