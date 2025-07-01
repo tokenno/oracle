@@ -3,7 +3,7 @@
   "short_name": "Oracle",
   "description": "In search for future Soundscapes... Ask the Oracle.",
   "start_url": "https://tokenno.github.io/oracle/",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#7bd3f7",
   "orientation": "portrait",
